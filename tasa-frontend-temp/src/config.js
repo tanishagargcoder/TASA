@@ -1,1 +1,0 @@
-export const API_URL = "https://tasa-1.onrender.com";

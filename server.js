@@ -13,7 +13,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(process.env.MONGO_URI)
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URL;
+
+if (!MONGO_URI) {
+  console.error("FATAL: MONGO_URI (or MONGO_URL) environment variable is not set");
+}
+
+mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 

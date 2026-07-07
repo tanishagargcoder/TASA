@@ -43,6 +43,7 @@ export default function Notes() {
   };
 
   const deleteNote = async (id) => {
+    if (!window.confirm("Delete this note?")) return;
     await axios.delete(`${API}/${id}`, authHeaders);
     setNotes(notes.filter((n) => n._id !== id));
   };
@@ -86,7 +87,7 @@ export default function Notes() {
     .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
 
   return (
-    <div>
+    <div className="fade-up">
 
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Notes 📝</h2>

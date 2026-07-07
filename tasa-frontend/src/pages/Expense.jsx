@@ -62,6 +62,7 @@ export default function Expense() {
   };
 
   const deleteExpense = async (id) => {
+    if (!window.confirm("Delete this expense?")) return;
     await axios.delete(`${API}/${id}`, authHeaders);
     setExpenses(expenses.filter(e => e._id !== id));
   };
@@ -83,7 +84,7 @@ export default function Expense() {
   })).filter(c => c.total > 0);
 
   return (
-    <div>
+    <div className="fade-up">
 
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Expenses 💸</h2>

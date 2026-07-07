@@ -7,8 +7,17 @@ import { API_URL } from "../config";
 
 const CATEGORIES = ["Food", "Travel", "Shopping", "Bills", "Other"];
 
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function Dashboard() {
   const [active, setActive] = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(true);
   const [userName, setUserName] = useState("");
   const [stats, setStats] = useState({
     totalTasks: 0,
@@ -86,6 +95,8 @@ export default function Dashboard() {
       });
     } catch {
       // overview stats are best-effort; modules load their own data
+    } finally {
+      setLoadingStats(false);
     }
   }, [token]);
 
@@ -95,19 +106,36 @@ export default function Dashboard() {
 
   const pendingTasks = stats.totalTasks - stats.completedTasks;
 
+  const navigate = (key) => {
+    setActive(key);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-purple-200 via-pink-100 to-indigo-200">
 
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/20 z-30 md:hidden"
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-64 m-4 rounded-3xl bg-white/30 backdrop-blur-xl border border-white/40 shadow-xl p-6">
-        <div className="mb-10 text-lg font-semibold text-gray-700">
-          Menu
+      <div
+        className={`fixed md:static inset-y-0 left-0 z-40 w-64 m-4 rounded-3xl bg-white/70 md:bg-white/30 backdrop-blur-xl border border-white/40 shadow-xl p-6 transform transition-transform duration-300 md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-[120%]"
+        }`}
+      >
+        <div className="mb-10 text-xl font-extrabold text-gray-800">
+          TASA <span className="text-rose-500">✨</span>
         </div>
 
         <nav className="space-y-3">
 
           <div
-            onClick={() => setActive("overview")}
+            onClick={() => navigate("overview")}
             className={`p-3 rounded-xl cursor-pointer transition ${
               active === "overview" ? "bg-white/50 shadow" : "hover:bg-white/40"
             }`}
@@ -116,7 +144,7 @@ export default function Dashboard() {
           </div>
 
           <div
-            onClick={() => setActive("tasks")}
+            onClick={() => navigate("tasks")}
             className={`p-3 rounded-xl cursor-pointer transition ${
               active === "tasks" ? "bg-white/50 shadow" : "hover:bg-white/40"
             }`}
@@ -125,7 +153,7 @@ export default function Dashboard() {
           </div>
 
           <div
-            onClick={() => setActive("notes")}
+            onClick={() => navigate("notes")}
             className={`p-3 rounded-xl cursor-pointer transition ${
               active === "notes" ? "bg-white/50 shadow" : "hover:bg-white/40"
             }`}
@@ -134,7 +162,7 @@ export default function Dashboard() {
           </div>
 
           <div
-            onClick={() => setActive("expenses")}
+            onClick={() => navigate("expenses")}
             className={`p-3 rounded-xl cursor-pointer transition ${
               active === "expenses" ? "bg-white/50 shadow" : "hover:bg-white/40"
             }`}
@@ -143,7 +171,7 @@ export default function Dashboard() {
           </div>
 
           <div
-            onClick={() => setActive("profile")}
+            onClick={() => navigate("profile")}
             className={`p-3 rounded-xl cursor-pointer transition ${
               active === "profile" ? "bg-white/50 shadow" : "hover:bg-white/40"
             }`}
@@ -164,20 +192,42 @@ export default function Dashboard() {
       </div>
 
       {/* Main */}
-      <div className="flex-1 p-10 overflow-auto">
-        <h1 className="text-3xl font-bold text-gray-800">
-          Welcome back{userName ? `, ${userName}` : ""} 👋
+      <div className="flex-1 p-5 sm:p-10 overflow-auto">
+
+        {/* Mobile menu button */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden mb-4 px-4 py-2 rounded-xl bg-white/50 backdrop-blur-md border border-white/60 shadow text-gray-700 font-medium"
+        >
+          ☰ Menu
+        </button>
+
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+          {greeting()}{userName ? `, ${userName}` : ""} 👋
         </h1>
 
         <p className="text-gray-600 mt-2">
-          Let’s manage everything smoothly today.
+          {new Date().toLocaleDateString("en-IN", {
+            weekday: "long", day: "numeric", month: "long", year: "numeric"
+          })} · Let’s manage everything smoothly today.
         </p>
 
         {/* SCREEN SWITCH */}
         <div className="mt-10">
 
-          {active === "overview" && (
-            <div>
+          {active === "overview" && loadingStats && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="skeleton bg-white/30 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg h-36"
+                />
+              ))}
+            </div>
+          )}
+
+          {active === "overview" && !loadingStats && (
+            <div className="fade-up">
               {/* Stat cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div

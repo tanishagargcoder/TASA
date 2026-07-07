@@ -85,6 +85,7 @@ export default function Tasks() {
   };
 
   const deleteTask = async (id) => {
+    if (!window.confirm("Delete this task?")) return;
     await fetch(`${API_URL}/api/tasks/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
@@ -126,7 +127,7 @@ export default function Tasks() {
     });
 
   return (
-    <div>
+    <div className="fade-up">
 
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Tasks ✅</h2>

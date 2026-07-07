@@ -33,12 +33,12 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
       <form
         onSubmit={handleLogin}
-        className="bg-white/40 backdrop-blur-xl border border-white/50 shadow-2xl p-10 rounded-3xl w-96"
+        className="bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-2xl p-10 rounded-3xl w-96"
       >
-        <h2 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
+        <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-6 text-center">
           Welcome Back ✨
         </h2>
 
@@ -51,7 +51,7 @@ export default function Login() {
         <input
           type="email"
           placeholder="Email Address"
-          className="w-full p-3 rounded-xl mb-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400"
+          className="w-full p-3 rounded-xl mb-4 border border-gray-300 dark:border-gray-600 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -60,7 +60,7 @@ export default function Login() {
         <input
           type="password"
           placeholder="Password"
-          className="w-full p-3 rounded-xl mb-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full p-3 rounded-xl mb-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -74,13 +74,13 @@ export default function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="mt-5 text-sm text-center text-gray-700">
+        <p className="mt-5 text-sm text-center text-gray-700 dark:text-gray-300">
           <Link to="/forgot-password" className="font-semibold text-rose-600">
             Forgot password?
           </Link>
         </p>
 
-        <p className="mt-2 text-sm text-center text-gray-700">
+        <p className="mt-2 text-sm text-center text-gray-700 dark:text-gray-300">
           New to TASA?{" "}
           <Link to="/register" className="font-semibold text-rose-600">
             Register

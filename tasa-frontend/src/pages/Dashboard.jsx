@@ -3,6 +3,7 @@ import Tasks from "./Tasks";
 import Notes from "./Notes";
 import Expense from "./Expense";
 import Profile from "./Profile";
+import ThemeToggle from "../components/ThemeToggle";
 import { API_URL } from "../config";
 
 const CATEGORIES = ["Food", "Travel", "Shopping", "Bills", "Other"];
@@ -26,6 +27,8 @@ export default function Dashboard() {
     recentNotes: [],
     categoryTotals: [],
     last7Days: [],
+    overdue: [],
+    dueToday: [],
   });
 
   const token = localStorage.getItem("token");
@@ -53,6 +56,7 @@ export default function Dashboard() {
       const expenseList = Array.isArray(expenses) ? expenses : [];
 
       const now = new Date();
+      const todayStart = new Date(now.toDateString());
       const monthExpenses = expenseList.filter((e) => {
         const d = new Date(e.date || e.createdAt);
         return (
@@ -85,6 +89,14 @@ export default function Dashboard() {
         };
       });
 
+      const pendingWithDue = taskList.filter((t) => !t.completed && t.dueDate);
+      const overdue = pendingWithDue.filter(
+        (t) => new Date(t.dueDate) < todayStart
+      );
+      const dueToday = pendingWithDue.filter(
+        (t) => new Date(t.dueDate).toDateString() === now.toDateString()
+      );
+
       setStats({
         totalTasks: taskList.length,
         completedTasks: taskList.filter((t) => t.completed).length,
@@ -92,6 +104,8 @@ export default function Dashboard() {
         recentNotes: noteList.slice(0, 3),
         categoryTotals,
         last7Days,
+        overdue,
+        dueToday,
       });
     } catch {
       // overview stats are best-effort; modules load their own data
@@ -111,8 +125,21 @@ export default function Dashboard() {
     setSidebarOpen(false);
   };
 
+  const navItem = (key, label) => (
+    <div
+      onClick={() => navigate(key)}
+      className={`p-3 rounded-xl cursor-pointer transition text-gray-700 dark:text-gray-200 ${
+        active === key
+          ? "bg-white/50 dark:bg-white/20 shadow"
+          : "hover:bg-white/40 dark:hover:bg-white/10"
+      }`}
+    >
+      {label}
+    </div>
+  );
+
   return (
-    <div className="flex h-screen bg-gradient-to-br from-purple-200 via-pink-100 to-indigo-200">
+    <div className="flex h-screen bg-gradient-to-br from-purple-200 via-pink-100 to-indigo-200 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
 
       {/* Mobile backdrop */}
       {sidebarOpen && (
@@ -124,67 +151,27 @@ export default function Dashboard() {
 
       {/* Sidebar */}
       <div
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 m-4 rounded-3xl bg-white/70 md:bg-white/30 backdrop-blur-xl border border-white/40 shadow-xl p-6 transform transition-transform duration-300 md:translate-x-0 ${
+        className={`fixed md:static inset-y-0 left-0 z-40 w-64 m-4 rounded-3xl bg-white/70 md:bg-white/30 dark:bg-gray-900/90 dark:md:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-xl p-6 transform transition-transform duration-300 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-[120%]"
         }`}
       >
-        <div className="mb-10 text-xl font-extrabold text-gray-800">
+        <div className="mb-10 text-xl font-extrabold text-gray-800 dark:text-gray-100">
           TASA <span className="text-rose-500">✨</span>
         </div>
 
         <nav className="space-y-3">
-
-          <div
-            onClick={() => navigate("overview")}
-            className={`p-3 rounded-xl cursor-pointer transition ${
-              active === "overview" ? "bg-white/50 shadow" : "hover:bg-white/40"
-            }`}
-          >
-            Overview
-          </div>
-
-          <div
-            onClick={() => navigate("tasks")}
-            className={`p-3 rounded-xl cursor-pointer transition ${
-              active === "tasks" ? "bg-white/50 shadow" : "hover:bg-white/40"
-            }`}
-          >
-            Tasks
-          </div>
-
-          <div
-            onClick={() => navigate("notes")}
-            className={`p-3 rounded-xl cursor-pointer transition ${
-              active === "notes" ? "bg-white/50 shadow" : "hover:bg-white/40"
-            }`}
-          >
-            Notes
-          </div>
-
-          <div
-            onClick={() => navigate("expenses")}
-            className={`p-3 rounded-xl cursor-pointer transition ${
-              active === "expenses" ? "bg-white/50 shadow" : "hover:bg-white/40"
-            }`}
-          >
-            Expenses
-          </div>
-
-          <div
-            onClick={() => navigate("profile")}
-            className={`p-3 rounded-xl cursor-pointer transition ${
-              active === "profile" ? "bg-white/50 shadow" : "hover:bg-white/40"
-            }`}
-          >
-            Profile
-          </div>
+          {navItem("overview", "Overview")}
+          {navItem("tasks", "Tasks")}
+          {navItem("notes", "Notes")}
+          {navItem("expenses", "Expenses")}
+          {navItem("profile", "Profile")}
 
           <div
             onClick={() => {
               localStorage.removeItem("token");
               window.location.href = "/login";
             }}
-            className="p-3 rounded-xl text-red-500 mt-10 cursor-pointer hover:bg-white/40 transition"
+            className="p-3 rounded-xl text-red-500 dark:text-red-400 mt-10 cursor-pointer hover:bg-white/40 dark:hover:bg-white/10 transition"
           >
             Logout
           </div>
@@ -194,23 +181,29 @@ export default function Dashboard() {
       {/* Main */}
       <div className="flex-1 p-5 sm:p-10 overflow-auto">
 
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="md:hidden mb-4 px-4 py-2 rounded-xl bg-white/50 backdrop-blur-md border border-white/60 shadow text-gray-700 font-medium"
-        >
-          ☰ Menu
-        </button>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden mb-4 px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/60 backdrop-blur-md border border-white/60 dark:border-gray-700 shadow text-gray-700 dark:text-gray-200 font-medium"
+            >
+              ☰ Menu
+            </button>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-          {greeting()}{userName ? `, ${userName}` : ""} 👋
-        </h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
+              {greeting()}{userName ? `, ${userName}` : ""} 👋
+            </h1>
 
-        <p className="text-gray-600 mt-2">
-          {new Date().toLocaleDateString("en-IN", {
-            weekday: "long", day: "numeric", month: "long", year: "numeric"
-          })} · Let’s manage everything smoothly today.
-        </p>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long", day: "numeric", month: "long", year: "numeric"
+              })} · Let’s manage everything smoothly today.
+            </p>
+          </div>
+
+          <ThemeToggle />
+        </div>
 
         {/* SCREEN SWITCH */}
         <div className="mt-10">
@@ -220,7 +213,7 @@ export default function Dashboard() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="skeleton bg-white/30 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg h-36"
+                  className="skeleton bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg h-36"
                 />
               ))}
             </div>
@@ -228,47 +221,81 @@ export default function Dashboard() {
 
           {active === "overview" && !loadingStats && (
             <div className="fade-up">
+
+              {/* Reminders */}
+              {(stats.overdue.length > 0 || stats.dueToday.length > 0) && (
+                <div className="mb-6 space-y-3">
+                  {stats.overdue.length > 0 && (
+                    <div
+                      onClick={() => navigate("tasks")}
+                      className="cursor-pointer bg-red-100/70 dark:bg-red-900/40 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow"
+                    >
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                        ⚠️ {stats.overdue.length} overdue task{stats.overdue.length > 1 ? "s" : ""}
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate">
+                        {stats.overdue.map((t) => t.title).join(" · ")}
+                      </p>
+                    </div>
+                  )}
+
+                  {stats.dueToday.length > 0 && (
+                    <div
+                      onClick={() => navigate("tasks")}
+                      className="cursor-pointer bg-amber-100/70 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 shadow"
+                    >
+                      <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                        ⏰ {stats.dueToday.length} task{stats.dueToday.length > 1 ? "s" : ""} due today
+                      </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 truncate">
+                        {stats.dueToday.map((t) => t.title).join(" · ")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Stat cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div
-                  onClick={() => setActive("tasks")}
-                  className="bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-white/40 transition"
+                  onClick={() => navigate("tasks")}
+                  className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/20 transition"
                 >
-                  <p className="text-sm text-gray-600">Total Tasks</p>
-                  <p className="text-4xl font-bold text-gray-800 mt-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Tasks</p>
+                  <p className="text-4xl font-bold text-gray-800 dark:text-gray-100 mt-2">
                     {stats.totalTasks}
                   </p>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     {stats.completedTasks} done · {pendingTasks} pending
                   </p>
                 </div>
 
                 <div
-                  onClick={() => setActive("expenses")}
-                  className="bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-white/40 transition"
+                  onClick={() => navigate("expenses")}
+                  className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/20 transition"
                 >
-                  <p className="text-sm text-gray-600">Expenses This Month</p>
-                  <p className="text-4xl font-bold text-gray-800 mt-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Expenses This Month</p>
+                  <p className="text-4xl font-bold text-gray-800 dark:text-gray-100 mt-2">
                     ₹{stats.monthExpense.toLocaleString("en-IN")}
                   </p>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     Tap to see history
                   </p>
                 </div>
 
                 <div
-                  onClick={() => setActive("notes")}
-                  className="bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-white/40 transition"
+                  onClick={() => navigate("notes")}
+                  className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-white/40 dark:hover:bg-white/20 transition"
                 >
-                  <p className="text-sm text-gray-600">Recent Notes</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Recent Notes</p>
                   {stats.recentNotes.length === 0 ? (
-                    <p className="text-gray-500 mt-3 text-sm">No notes yet</p>
+                    <p className="text-gray-500 dark:text-gray-400 mt-3 text-sm">No notes yet</p>
                   ) : (
                     <ul className="mt-3 space-y-2">
                       {stats.recentNotes.map((n) => (
                         <li
                           key={n._id}
-                          className="text-sm text-gray-700 truncate bg-white/40 rounded-lg px-3 py-1"
+                          className="text-sm text-gray-700 dark:text-gray-200 truncate bg-white/40 dark:bg-white/10 rounded-lg px-3 py-1"
                         >
                           {n.text}
                         </li>
@@ -280,14 +307,14 @@ export default function Dashboard() {
 
               {/* Task progress bar */}
               {stats.totalTasks > 0 && (
-                <div className="mt-6 bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg">
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="mt-6 bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
                     <span>Task Progress</span>
                     <span>
                       {Math.round((stats.completedTasks / stats.totalTasks) * 100)}%
                     </span>
                   </div>
-                  <div className="w-full h-3 bg-white/40 rounded-full overflow-hidden">
+                  <div className="w-full h-3 bg-white/40 dark:bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full transition-all duration-500"
                       style={{
@@ -302,24 +329,24 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
 
                 {/* Spending by category — this month */}
-                <div className="bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-4">
+                <div className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
                     Spending by Category (This Month)
                   </p>
 
                   {stats.categoryTotals.length === 0 ? (
-                    <p className="text-sm text-gray-500">No expenses this month yet.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No expenses this month yet.</p>
                   ) : (
                     <div className="space-y-3">
                       {stats.categoryTotals.map((c) => {
                         const max = Math.max(...stats.categoryTotals.map(x => x.total));
                         return (
                           <div key={c.cat}>
-                            <div className="flex justify-between text-xs text-gray-600 mb-1">
+                            <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300 mb-1">
                               <span>{c.cat}</span>
                               <span>₹{c.total.toLocaleString("en-IN")}</span>
                             </div>
-                            <div className="w-full h-2.5 bg-white/40 rounded-full overflow-hidden">
+                            <div className="w-full h-2.5 bg-white/40 dark:bg-white/10 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-pink-400 to-rose-500 rounded-full transition-all duration-500"
                                 style={{ width: `${(c.total / max) * 100}%` }}
@@ -333,13 +360,13 @@ export default function Dashboard() {
                 </div>
 
                 {/* Last 7 days spending */}
-                <div className="bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-4">
+                <div className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
                     Spending — Last 7 Days
                   </p>
 
                   {stats.last7Days.every((d) => d.total === 0) ? (
-                    <p className="text-sm text-gray-500">No spending in the last 7 days.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No spending in the last 7 days.</p>
                   ) : (
                     <div className="flex items-end gap-2 h-32">
                       {stats.last7Days.map((d, i) => {
@@ -357,7 +384,7 @@ export default function Dashboard() {
                                 minHeight: d.total > 0 ? "4px" : "0",
                               }}
                             />
-                            <span className="text-[10px] text-gray-500 mt-1">{d.label}</span>
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{d.label}</span>
                           </div>
                         );
                       })}

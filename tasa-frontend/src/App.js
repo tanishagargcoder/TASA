@@ -9,11 +9,13 @@ import VerifyOtp from "./pages/VerifyOtp";
 import ResetPassword from "./pages/ResetPassword";
 import Notes from "./pages/Notes";
 import Expense from "./pages/Expense";
+import { ToastProvider } from "./context/ToastContext";
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+      <ToastProvider>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
         <Routes>
           {/* Landing */}
           <Route path="/" element={<Landing />} />
@@ -54,6 +56,7 @@ function App() {
           
         </Routes>
       </div>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import ThemeToggle from "../components/ThemeToggle";
 
 const features = [
   {
@@ -24,14 +25,15 @@ export default function Landing() {
 
       {/* Navbar */}
       <div className="flex justify-between items-center px-6 sm:px-10 py-6">
-        <div className="text-2xl font-extrabold text-gray-800">
+        <div className="text-2xl font-extrabold text-gray-800 dark:text-gray-100">
           TASA <span className="text-rose-500">✨</span>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <ThemeToggle />
           <Link
             to="/login"
-            className="px-5 py-2 rounded-xl bg-white/60 backdrop-blur-md border border-white/40 shadow-md hover:shadow-lg hover:scale-105 transition font-medium"
+            className="px-5 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 dark:text-gray-200 backdrop-blur-md border border-white/40 dark:border-gray-700 shadow-md hover:shadow-lg hover:scale-105 transition font-medium"
           >
             Login
           </Link>
@@ -47,16 +49,16 @@ export default function Landing() {
       {/* Hero */}
       <div className="flex flex-1 items-center justify-center text-center px-6 py-16">
         <div className="fade-up">
-          <span className="inline-block mb-6 px-4 py-1.5 rounded-full bg-white/50 backdrop-blur-md border border-white/60 text-sm text-gray-700 shadow">
+          <span className="inline-block mb-6 px-4 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/60 backdrop-blur-md border border-white/60 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200 shadow">
             🌸 Track and Simplify Activities
           </span>
 
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-800 leading-tight">
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-800 dark:text-gray-100 leading-tight">
             Organize your life <br />
             the smart way ✨
           </h2>
 
-          <p className="mt-4 text-gray-600 text-lg max-w-xl mx-auto">
+          <p className="mt-4 text-gray-600 dark:text-gray-300 text-lg max-w-xl mx-auto">
             Tasks, notes & expenses — all in one beautiful place.
             Free, simple and made for your everyday.
           </p>
@@ -70,7 +72,7 @@ export default function Landing() {
             </Link>
             <Link
               to="/login"
-              className="px-8 py-3 rounded-xl bg-white/60 backdrop-blur-md border border-white/50 text-gray-700 font-semibold shadow hover:shadow-lg hover:scale-105 transition"
+              className="px-8 py-3 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-md border border-white/50 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold shadow hover:shadow-lg hover:scale-105 transition"
             >
               I have an account
             </Link>
@@ -81,11 +83,11 @@ export default function Landing() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="bg-white/40 backdrop-blur-xl border border-white/50 rounded-2xl shadow-lg p-6 hover:shadow-2xl hover:-translate-y-1 transition duration-300"
+                className="bg-white/40 dark:bg-white/10 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-2xl shadow-lg p-6 hover:shadow-2xl hover:-translate-y-1 transition duration-300"
               >
                 <div className="text-3xl">{f.emoji}</div>
-                <h3 className="mt-3 text-lg font-bold text-gray-800">{f.title}</h3>
-                <p className="mt-1 text-sm text-gray-600">{f.desc}</p>
+                <h3 className="mt-3 text-lg font-bold text-gray-800 dark:text-gray-100">{f.title}</h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -93,7 +95,7 @@ export default function Landing() {
       </div>
 
       {/* Footer */}
-      <footer className="text-center py-6 text-sm text-gray-500">
+      <footer className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
         Made with 💖 · TASA — Track and Simplify Activities
       </footer>
     </div>

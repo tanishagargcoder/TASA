@@ -21,6 +21,7 @@ router.post("/", authMiddleware, async (req, res) => {
   try {
     const note = new Note({
       text: req.body.text,
+      color: req.body.color,
       userId: req.user.id
     });
 
@@ -56,7 +57,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const updates = {};
-    ["text", "pinned"].forEach((field) => {
+    ["text", "pinned", "color"].forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 

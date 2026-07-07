@@ -18,6 +18,12 @@ const NoteSchema = new mongoose.Schema({
     default: false
   },
 
+  color: {
+    type: String,
+    enum: ["yellow", "rose", "blue", "green", "purple"],
+    default: "yellow"
+  },
+
   createdAt: {
     type: Date,
     default: Date.now

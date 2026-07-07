@@ -13,6 +13,7 @@ router.post("/", authMiddleware, async (req, res) => {
       description: req.body.description,
       priority: req.body.priority,
       dueDate: req.body.dueDate,
+      category: req.body.category,
       userId: req.user.id
     });
 
@@ -76,7 +77,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const updates = {};
-    ["title", "description", "priority", "dueDate", "completed"].forEach((field) => {
+    ["title", "description", "priority", "dueDate", "completed", "category"].forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 

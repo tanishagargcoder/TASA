@@ -11,6 +11,7 @@ const taskSchema = new mongoose.Schema(
       default: "Medium"
     },
     dueDate: { type: Date, default: null },
+    category: { type: String, default: "" },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

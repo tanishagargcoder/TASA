@@ -66,19 +66,19 @@ export default function Profile() {
   return (
     <div className="fade-up">
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile 👤</h2>
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Profile 👤</h2>
 
       {/* User info */}
-      <div className="bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-lg p-6 mb-6 max-w-xl">
+      <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 mb-6 max-w-xl">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white flex items-center justify-center text-2xl font-bold shadow-lg">
             {user?.name ? user.name[0].toUpperCase() : "?"}
           </div>
           <div>
-            <p className="text-xl font-semibold text-gray-800">{user?.name || "..."}</p>
-            <p className="text-sm text-gray-600">{user?.email || ""}</p>
+            <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">{user?.name || "..."}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{user?.email || ""}</p>
             {user?.createdAt && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Member since {new Date(user.createdAt).toLocaleDateString("en-IN", {
                   year: "numeric", month: "long"
                 })}
@@ -91,9 +91,9 @@ export default function Profile() {
       {/* Change password */}
       <form
         onSubmit={changePassword}
-        className="bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-lg p-6 max-w-xl"
+        className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 max-w-xl"
       >
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Change Password 🔒</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Change Password 🔒</h3>
 
         {message && (
           <p className={`mb-4 text-sm rounded-xl p-3 border ${
@@ -111,7 +111,7 @@ export default function Profile() {
           value={oldPassword}
           onChange={(e) => setOldPassword(e.target.value)}
           required
-          className="w-full p-3 rounded-xl mb-4 border border-gray-300 bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full p-3 rounded-xl mb-4 border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
         />
 
         <input
@@ -120,7 +120,7 @@ export default function Profile() {
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
-          className="w-full p-3 rounded-xl mb-4 border border-gray-300 bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full p-3 rounded-xl mb-4 border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
         />
 
         <input
@@ -129,7 +129,7 @@ export default function Profile() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          className="w-full p-3 rounded-xl mb-6 border border-gray-300 bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          className="w-full p-3 rounded-xl mb-6 border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
         />
 
         <button

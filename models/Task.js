@@ -5,6 +5,12 @@ const taskSchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String },
     completed: { type: Boolean, default: false },
+    priority: {
+      type: String,
+      enum: ["High", "Medium", "Low"],
+      default: "Medium"
+    },
+    dueDate: { type: Date, default: null },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

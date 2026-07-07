@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../config";
 
@@ -7,38 +7,86 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    const res = await axios.post(
-      `${API_URL}/api/auth/login`,
-      { email, password }
-    );
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/auth/login`,
+        { email, password }
+      );
 
-    localStorage.setItem("token", res.data.token);
-
-    navigate("/dashboard");
+      localStorage.setItem("token", res.data.token);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white/40 backdrop-blur-xl border border-white/50 shadow-2xl p-10 rounded-3xl w-96"
+      >
+        <h2 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
+          Welcome Back ✨
+        </h2>
 
-      <input
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        {error && (
+          <p className="mb-4 text-sm text-red-600 bg-red-100/70 border border-red-200 rounded-xl p-3 text-center">
+            {error}
+          </p>
+        )}
 
-      <input
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <input
+          type="email"
+          placeholder="Email Address"
+          className="w-full p-3 rounded-xl mb-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-      <button onClick={handleLogin}>Login</button>
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full p-3 rounded-xl mb-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition duration-300 disabled:opacity-60 disabled:hover:scale-100"
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        <p className="mt-5 text-sm text-center text-gray-700">
+          <Link to="/forgot-password" className="font-semibold text-rose-600">
+            Forgot password?
+          </Link>
+        </p>
+
+        <p className="mt-2 text-sm text-center text-gray-700">
+          New to TASA?{" "}
+          <Link to="/register" className="font-semibold text-rose-600">
+            Register
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }

@@ -11,6 +11,8 @@ router.post("/", authMiddleware, async (req, res) => {
     const task = new Task({
       title: req.body.title,
       description: req.body.description,
+      priority: req.body.priority,
+      dueDate: req.body.dueDate,
       userId: req.user.id
     });
 
@@ -26,19 +28,23 @@ router.post("/", authMiddleware, async (req, res) => {
 // GET MY TASKS (PROTECTED)
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const tasks = await Task.find({ userId: req.user.id });
+    const tasks = await Task.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ✅ TOGGLE TASK STATUS
+// TOGGLE TASK STATUS (only own task)
 router.put("/toggle/:id", authMiddleware, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, userId: req.user.id });
 
-    task.completed = !task.completed;  // reverse
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    task.completed = !task.completed;
     await task.save();
 
     res.json(task);
@@ -48,32 +54,47 @@ router.put("/toggle/:id", authMiddleware, async (req, res) => {
 });
 
 
-
-// 🗑 DELETE TASK (PROTECTED)  ✅ NEW
+// DELETE TASK (only own task)
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
-    await Task.findByIdAndDelete(req.params.id);
+    const deleted = await Task.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
     res.json({ message: "Task deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ✏ UPDATE TASK (PROTECTED)
+// UPDATE TASK (only own task)
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const updated = await Task.findByIdAndUpdate(
-      req.params.id,
-      { title: req.body.title },
+    const updates = {};
+    ["title", "description", "priority", "dueDate", "completed"].forEach((field) => {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    });
+
+    const updated = await Task.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      updates,
       { new: true }
     );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Task not found" });
+    }
 
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 
 module.exports = router;

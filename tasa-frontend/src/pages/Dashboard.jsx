@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import Tasks from "./Tasks";
 import Notes from "./Notes";
 import Expense from "./Expense";
+import Profile from "./Profile";
 import { API_URL } from "../config";
+
+const CATEGORIES = ["Food", "Travel", "Shopping", "Bills", "Other"];
 
 export default function Dashboard() {
   const [active, setActive] = useState("overview");
@@ -12,6 +15,8 @@ export default function Dashboard() {
     completedTasks: 0,
     monthExpense: 0,
     recentNotes: [],
+    categoryTotals: [],
+    last7Days: [],
   });
 
   const token = localStorage.getItem("token");
@@ -39,21 +44,45 @@ export default function Dashboard() {
       const expenseList = Array.isArray(expenses) ? expenses : [];
 
       const now = new Date();
-      const monthExpense = expenseList
-        .filter((e) => {
-          const d = new Date(e.date || e.createdAt);
-          return (
-            d.getMonth() === now.getMonth() &&
-            d.getFullYear() === now.getFullYear()
-          );
-        })
+      const monthExpenses = expenseList.filter((e) => {
+        const d = new Date(e.date || e.createdAt);
+        return (
+          d.getMonth() === now.getMonth() &&
+          d.getFullYear() === now.getFullYear()
+        );
+      });
+      const monthExpense = monthExpenses
         .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+      const categoryTotals = CATEGORIES.map((cat) => ({
+        cat,
+        total: monthExpenses
+          .filter((e) => e.category === cat)
+          .reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
+      })).filter((c) => c.total > 0);
+
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const day = new Date();
+        day.setDate(day.getDate() - (6 - i));
+        const total = expenseList
+          .filter((e) => {
+            const d = new Date(e.date || e.createdAt);
+            return d.toDateString() === day.toDateString();
+          })
+          .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        return {
+          label: day.toLocaleDateString("en-IN", { weekday: "short" }),
+          total,
+        };
+      });
 
       setStats({
         totalTasks: taskList.length,
         completedTasks: taskList.filter((t) => t.completed).length,
         monthExpense,
         recentNotes: noteList.slice(0, 3),
+        categoryTotals,
+        last7Days,
       });
     } catch {
       // overview stats are best-effort; modules load their own data
@@ -111,6 +140,15 @@ export default function Dashboard() {
             }`}
           >
             Expenses
+          </div>
+
+          <div
+            onClick={() => setActive("profile")}
+            className={`p-3 rounded-xl cursor-pointer transition ${
+              active === "profile" ? "bg-white/50 shadow" : "hover:bg-white/40"
+            }`}
+          >
+            Profile
           </div>
 
           <div
@@ -209,12 +247,82 @@ export default function Dashboard() {
                   </div>
                 </div>
               )}
+
+              {/* Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+                {/* Spending by category — this month */}
+                <div className="bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg">
+                  <p className="text-sm font-semibold text-gray-700 mb-4">
+                    Spending by Category (This Month)
+                  </p>
+
+                  {stats.categoryTotals.length === 0 ? (
+                    <p className="text-sm text-gray-500">No expenses this month yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {stats.categoryTotals.map((c) => {
+                        const max = Math.max(...stats.categoryTotals.map(x => x.total));
+                        return (
+                          <div key={c.cat}>
+                            <div className="flex justify-between text-xs text-gray-600 mb-1">
+                              <span>{c.cat}</span>
+                              <span>₹{c.total.toLocaleString("en-IN")}</span>
+                            </div>
+                            <div className="w-full h-2.5 bg-white/40 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-pink-400 to-rose-500 rounded-full transition-all duration-500"
+                                style={{ width: `${(c.total / max) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Last 7 days spending */}
+                <div className="bg-white/25 backdrop-blur-xl border border-white/40 p-6 rounded-2xl shadow-lg">
+                  <p className="text-sm font-semibold text-gray-700 mb-4">
+                    Spending — Last 7 Days
+                  </p>
+
+                  {stats.last7Days.every((d) => d.total === 0) ? (
+                    <p className="text-sm text-gray-500">No spending in the last 7 days.</p>
+                  ) : (
+                    <div className="flex items-end gap-2 h-32">
+                      {stats.last7Days.map((d, i) => {
+                        const max = Math.max(...stats.last7Days.map(x => x.total), 1);
+                        return (
+                          <div
+                            key={i}
+                            className="flex-1 flex flex-col items-center justify-end h-full"
+                            title={`${d.label}: ₹${d.total.toLocaleString("en-IN")}`}
+                          >
+                            <div
+                              className="w-full max-w-[28px] bg-gradient-to-t from-rose-500 to-pink-400 rounded-t-md transition-all duration-500 hover:opacity-80"
+                              style={{
+                                height: `${(d.total / max) * 100}%`,
+                                minHeight: d.total > 0 ? "4px" : "0",
+                              }}
+                            />
+                            <span className="text-[10px] text-gray-500 mt-1">{d.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </div>
             </div>
           )}
 
           {active === "tasks" && <Tasks />}
           {active === "notes" && <Notes />}
           {active === "expenses" && <Expense />}
+          {active === "profile" && <Profile />}
 
         </div>
       </div>

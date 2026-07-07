@@ -47,6 +47,15 @@ export default function Notes() {
     setNotes(notes.filter((n) => n._id !== id));
   };
 
+  const togglePin = async (note) => {
+    const res = await axios.put(
+      `${API}/${note._id}`,
+      { pinned: !note.pinned },
+      authHeaders
+    );
+    setNotes(notes.map(n => (n._id === note._id ? res.data : n)));
+  };
+
   const startEdit = (note) => {
     setText(note.text);
     setEditingId(note._id);
@@ -70,9 +79,11 @@ export default function Notes() {
     setText("");
   };
 
-  const filteredNotes = notes.filter(n =>
-    (n.text || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredNotes = notes
+    .filter(n =>
+      (n.text || "").toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
 
   return (
     <div>
@@ -142,9 +153,14 @@ export default function Notes() {
         {filteredNotes.map(note => (
           <div
             key={note._id}
-            className="bg-yellow-100/70 backdrop-blur-xl border border-yellow-200 rounded-2xl shadow p-4 flex flex-col"
+            className={`backdrop-blur-xl rounded-2xl shadow p-4 flex flex-col ${
+              note.pinned
+                ? "bg-rose-100/70 border-2 border-rose-300"
+                : "bg-yellow-100/70 border border-yellow-200"
+            }`}
           >
             <p className="text-gray-800 flex-1 whitespace-pre-wrap break-words">
+              {note.pinned && <span className="mr-1">📌</span>}
               {note.text}
             </p>
 
@@ -154,6 +170,17 @@ export default function Notes() {
               </span>
 
               <div className="flex gap-2">
+                <button
+                  onClick={() => togglePin(note)}
+                  title={note.pinned ? "Unpin" : "Pin"}
+                  className={`px-3 py-1 rounded-lg text-sm border transition ${
+                    note.pinned
+                      ? "bg-rose-200/80 border-rose-300 text-rose-700 hover:bg-rose-200"
+                      : "bg-white/70 border-gray-300 text-gray-700 hover:bg-white"
+                  }`}
+                >
+                  📌
+                </button>
                 <button
                   onClick={() => startEdit(note)}
                   className="px-3 py-1 rounded-lg text-sm bg-white/70 border border-gray-300 text-gray-700 hover:bg-white transition"

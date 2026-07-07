@@ -15,6 +15,8 @@ export default function Tasks() {
   const [editingId, setEditingId] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [query, setQuery] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -100,6 +102,29 @@ export default function Tasks() {
 
   const pending = tasks.filter(t => !t.completed).length;
 
+  const isOverdue = (task) =>
+    task.dueDate && !task.completed &&
+    new Date(task.dueDate) < new Date(new Date().toDateString());
+
+  const priorityRank = { High: 0, Medium: 1, Low: 2 };
+
+  const visibleTasks = tasks
+    .filter(t =>
+      filter === "all" ? true :
+      filter === "pending" ? !t.completed :
+      t.completed
+    )
+    .filter(t =>
+      (t.title || "").toLowerCase().includes(query.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      const p = (priorityRank[a.priority] ?? 1) - (priorityRank[b.priority] ?? 1);
+      if (p !== 0) return p;
+      if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate);
+      return a.dueDate ? -1 : b.dueDate ? 1 : 0;
+    });
+
   return (
     <div>
 
@@ -160,13 +185,47 @@ export default function Tasks() {
         )}
       </div>
 
+      {/* Filter tabs + search */}
+      <div className="flex flex-wrap gap-3 items-center mb-4">
+        <div className="flex gap-1 bg-white/30 backdrop-blur-xl border border-white/40 rounded-xl p-1">
+          {[
+            { key: "all", label: "All" },
+            { key: "pending", label: "Pending" },
+            { key: "done", label: "Done" },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setFilter(tab.key)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                filter === tab.key
+                  ? "bg-white/70 shadow text-gray-800"
+                  : "text-gray-600 hover:bg-white/40"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <input
+          placeholder="Search tasks..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="flex-1 min-w-[160px] p-2.5 rounded-xl border border-gray-300 bg-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400"
+        />
+      </div>
+
       {/* Task list */}
-      {tasks.length === 0 && (
-        <p className="text-gray-600">No tasks yet. Add your first task above 🌸</p>
+      {visibleTasks.length === 0 && (
+        <p className="text-gray-600">
+          {tasks.length === 0
+            ? "No tasks yet. Add your first task above 🌸"
+            : "No tasks match this filter."}
+        </p>
       )}
 
       <div className="space-y-3">
-        {tasks.map(task => (
+        {visibleTasks.map(task => (
           <div
             key={task._id}
             className="bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow p-4 flex flex-wrap items-center gap-3"
@@ -183,8 +242,9 @@ export default function Tasks() {
                 {task.title}
               </p>
               {task.dueDate && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className={`text-xs mt-1 ${isOverdue(task) ? "text-red-600 font-semibold" : "text-gray-500"}`}>
                   Due: {new Date(task.dueDate).toLocaleDateString()}
+                  {isOverdue(task) && " · Overdue ⚠️"}
                 </p>
               )}
             </div>

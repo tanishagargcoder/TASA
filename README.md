@@ -1,8 +1,16 @@
 # TASA ✨ — Track and Simplify Activities
 
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express%205-339933?logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8)
+
 A full-stack **MERN productivity app** to manage your tasks, notes and expenses in one beautiful place — with charts, dark mode, budgets and PWA support.
 
 **🌐 Live demo:** [tasa-viw2.vercel.app](https://tasa-viw2.vercel.app) · [Backend API](https://tasa-1.onrender.com)
+
+> ⏳ First load may take ~30 seconds — the free-tier backend sleeps when idle.
 
 ## Features
 
@@ -55,7 +63,6 @@ A full-stack **MERN productivity app** to manage your tasks, notes and expenses 
 
 ```
 TASA/
-├── controllers/          # (reserved)
 ├── middleware/           # JWT auth middleware
 ├── models/               # User, Task, Note, Expense schemas
 ├── routes/               # auth, tasks, notes, expenses

@@ -2,7 +2,7 @@
 
 A full-stack **MERN productivity app** to manage your tasks, notes and expenses in one beautiful place — with charts, dark mode, budgets and PWA support.
 
-**Live demo:** [Backend API](https://tasa-1.onrender.com) · Frontend on Vercel
+**🌐 Live demo:** [tasa-viw2.vercel.app](https://tasa-viw2.vercel.app) · [Backend API](https://tasa-1.onrender.com)
 
 ## Features
 

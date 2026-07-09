@@ -9,6 +9,7 @@ import VerifyOtp from "./pages/VerifyOtp";
 import ResetPassword from "./pages/ResetPassword";
 import Notes from "./pages/Notes";
 import Expense from "./pages/Expense";
+import NotFound from "./pages/NotFound";
 import { ToastProvider } from "./context/ToastContext";
 
 function App() {
@@ -54,6 +55,8 @@ function App() {
           }
           />
           
+          {/* 404 catch-all */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       </ToastProvider>

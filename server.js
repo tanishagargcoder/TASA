@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
@@ -9,6 +10,9 @@ const noteRoutes = require("./routes/note");
 const expenseRoutes = require("./routes/expense");
 
 const app = express();
+
+// Render/Vercel sit behind a proxy — needed so rate limiting sees real client IPs
+app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(cors());
@@ -23,7 +27,16 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
-app.use("/api/auth", authRoutes);
+// Brute-force protection on auth endpoints (login, register, OTP)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts, please try again in 15 minutes" }
+});
+
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/expenses", expenseRoutes);

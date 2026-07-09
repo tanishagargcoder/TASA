@@ -1,18 +1,38 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
 import { API_URL } from "../config";
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const { email, otp } = location.state || {};
 
+  // Direct URL open without verified OTP → start over
+  if (!email || !otp) {
+    return <Navigate to="/forgot-password" />;
+  }
+
   const handleReset = async (e) => {
     e.preventDefault();
+    setError("");
 
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
     try {
       await axios.post(`${API_URL}/api/auth/reset-password`, {
         email,
@@ -20,10 +40,11 @@ export default function ResetPassword() {
         newPassword,
       });
 
-      alert("Password reset successful 🎉");
       navigate("/login");
-    } catch (error) {
-      alert(error.response?.data?.message || "Reset failed");
+    } catch (err) {
+      setError(err.response?.data?.message || "Reset failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,20 +58,46 @@ export default function ResetPassword() {
           Reset Password 🔐
         </h2>
 
+        {error && (
+          <p className="mb-4 text-sm text-red-600 bg-red-100/70 border border-red-200 rounded-xl p-3 text-center dark:bg-red-900/40 dark:border-red-800 dark:text-red-300">
+            {error}
+          </p>
+        )}
+
+        <div className="relative mb-4">
+          <input
+            type={showPass ? "text" : "password"}
+            placeholder="Enter New Password"
+            className="w-full p-3 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPass(!showPass)}
+            title={showPass ? "Hide password" : "Show password"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-70 hover:opacity-100"
+          >
+            {showPass ? "🙈" : "👁️"}
+          </button>
+        </div>
+
         <input
-          type="password"
-          placeholder="Enter New Password"
+          type={showPass ? "text" : "password"}
+          placeholder="Confirm New Password"
           className="w-full p-3 rounded-xl mb-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
 
         <button
           type="submit"
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition"
+          disabled={loading}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition disabled:opacity-60 disabled:hover:scale-100"
         >
-          Reset Password
+          {loading ? "Resetting..." : "Reset Password"}
         </button>
       </form>
     </div>

@@ -94,6 +94,27 @@ export default function Landing() {
         </div>
       </div>
 
+      {/* How it works */}
+      <div className="px-6 pb-16">
+        <h3 className="text-center text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8">
+          How it works 🌟
+        </h3>
+        <div className="flex flex-wrap justify-center gap-6 max-w-3xl mx-auto">
+          {[
+            { step: "1", text: "Create your free account" },
+            { step: "2", text: "Add tasks, notes & expenses" },
+            { step: "3", text: "Track everything on one dashboard" },
+          ].map((s) => (
+            <div key={s.step} className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold flex items-center justify-center shadow-lg shrink-0">
+                {s.step}
+              </span>
+              <span className="text-gray-700 dark:text-gray-200 font-medium">{s.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Footer */}
       <footer className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
         Made with 💖 · TASA — Track and Simplify Activities

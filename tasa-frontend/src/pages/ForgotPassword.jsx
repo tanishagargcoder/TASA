@@ -5,20 +5,25 @@ import { API_URL } from "../config";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       await axios.post(`${API_URL}/api/auth/forgot-password`, {
         email,
       });
 
-      alert("OTP sent to your email ✨");
       navigate("/verify-otp", { state: { email } });
-    } catch (error) {
-      alert(error.response?.data?.message || "Something went wrong");
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,9 +33,19 @@ export default function ForgotPassword() {
         onSubmit={handleSubmit}
         className="bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-2xl p-10 rounded-3xl w-96"
       >
-        <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-6 text-center">
+        <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-3 text-center">
           Forgot Password 💌
         </h2>
+
+        <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-6">
+          We'll email you a 6-digit OTP to reset it.
+        </p>
+
+        {error && (
+          <p className="mb-4 text-sm text-red-600 bg-red-100/70 border border-red-200 rounded-xl p-3 text-center dark:bg-red-900/40 dark:border-red-800 dark:text-red-300">
+            {error}
+          </p>
+        )}
 
         <input
           type="email"
@@ -43,9 +58,10 @@ export default function ForgotPassword() {
 
         <button
           type="submit"
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition"
+          disabled={loading}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition disabled:opacity-60 disabled:hover:scale-100"
         >
-          Send OTP
+          {loading ? "Sending OTP..." : "Send OTP"}
         </button>
 
         <p className="mt-5 text-sm text-center text-gray-700 dark:text-gray-300">

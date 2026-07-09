@@ -101,6 +101,21 @@ export default function Tasks() {
     getTasks();
   };
 
+  const clearCompleted = async () => {
+    const done = tasks.filter(t => t.completed);
+    if (done.length === 0) return;
+    if (!window.confirm(`Delete all ${done.length} completed task${done.length > 1 ? "s" : ""}?`)) return;
+
+    await Promise.all(done.map(t =>
+      fetch(`${API_URL}/api/tasks/${t._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    ));
+    toast(`${done.length} completed task${done.length > 1 ? "s" : ""} cleared 🧹`);
+    getTasks();
+  };
+
   const toggleTask = async (task) => {
     await fetch(`${API_URL}/api/tasks/toggle/${task._id}`, {
       method: "PUT",
@@ -235,6 +250,15 @@ export default function Tasks() {
           onChange={(e) => setQuery(e.target.value)}
           className={`flex-1 min-w-[160px] py-2.5 ${inputCls}`}
         />
+
+        {tasks.some(t => t.completed) && (
+          <button
+            onClick={clearCompleted}
+            className="px-4 py-2.5 rounded-xl text-sm bg-white/40 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/40 dark:hover:text-red-300 transition"
+          >
+            🧹 Clear Done
+          </button>
+        )}
       </div>
 
       {/* Task list */}

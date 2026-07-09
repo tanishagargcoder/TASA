@@ -222,6 +222,23 @@ export default function Dashboard() {
           {active === "overview" && !loadingStats && (
             <div className="fade-up">
 
+              {/* Quick actions */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                {[
+                  { key: "tasks", label: "+ New Task" },
+                  { key: "notes", label: "+ New Note" },
+                  { key: "expenses", label: "+ Add Expense" },
+                ].map((a) => (
+                  <button
+                    key={a.key}
+                    onClick={() => navigate(a.key)}
+                    className="px-5 py-2.5 rounded-xl bg-white/40 dark:bg-white/10 backdrop-blur-md border border-white/50 dark:border-white/10 text-gray-700 dark:text-gray-200 font-medium shadow hover:shadow-lg hover:scale-105 hover:bg-white/60 dark:hover:bg-white/20 transition"
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+
               {/* Reminders */}
               {(stats.overdue.length > 0 || stats.dueToday.length > 0) && (
                 <div className="mb-6 space-y-3">

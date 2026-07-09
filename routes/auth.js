@@ -195,4 +195,28 @@ router.get("/me", authMiddleware, async (req, res) => {
 });
 
 
+// ================= DELETE ACCOUNT (AND ALL USER DATA) =================
+router.delete("/me", authMiddleware, async (req, res) => {
+  try {
+    const Task = require("../models/Task");
+    const Note = require("../models/Note");
+    const Expense = require("../models/Expense");
+
+    const userId = req.user.id;
+
+    await Promise.all([
+      Task.deleteMany({ userId }),
+      Note.deleteMany({ userId }),
+      Expense.deleteMany({ userId }),
+    ]);
+
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: "Account deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 module.exports = router;

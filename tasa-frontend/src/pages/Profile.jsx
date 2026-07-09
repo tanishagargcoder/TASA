@@ -5,6 +5,7 @@ import { API_URL } from "../config";
 export default function Profile() {
 
   const [user, setUser] = useState(null);
+  const [counts, setCounts] = useState(null);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -16,14 +17,40 @@ export default function Profile() {
 
   const fetchUser = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const headers = { Authorization: `Bearer ${token}` };
+      const [userRes, tasksRes, notesRes, expensesRes] = await Promise.all([
+        axios.get(`${API_URL}/api/auth/me`, { headers }),
+        axios.get(`${API_URL}/api/tasks`, { headers }),
+        axios.get(`${API_URL}/api/notes`, { headers }),
+        axios.get(`${API_URL}/api/expenses`, { headers }),
+      ]);
+      setUser(userRes.data);
+      setCounts({
+        tasks: Array.isArray(tasksRes.data) ? tasksRes.data.length : 0,
+        notes: Array.isArray(notesRes.data) ? notesRes.data.length : 0,
+        expenses: Array.isArray(expensesRes.data) ? expensesRes.data.length : 0,
       });
-      setUser(res.data);
     } catch {
       setMessage({ type: "error", text: "Could not load profile" });
     }
   }, [token]);
+
+  const deleteAccount = async () => {
+    if (!window.confirm("This will permanently delete your account and ALL your tasks, notes and expenses. Continue?")) return;
+
+    const typed = window.prompt('Type "DELETE" to confirm:');
+    if (typed !== "DELETE") return;
+
+    try {
+      await axios.delete(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      localStorage.removeItem("token");
+      window.location.href = "/";
+    } catch {
+      setMessage({ type: "error", text: "Could not delete account" });
+    }
+  };
 
   useEffect(() => {
     fetchUser();
@@ -88,6 +115,26 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* Account stats */}
+      {counts && (
+        <div className="grid grid-cols-3 gap-4 mb-6 max-w-xl">
+          {[
+            { label: "Tasks", value: counts.tasks, emoji: "✅" },
+            { label: "Notes", value: counts.notes, emoji: "📝" },
+            { label: "Expenses", value: counts.expenses, emoji: "💸" },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-4 text-center"
+            >
+              <p className="text-2xl">{s.emoji}</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{s.value}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Change password */}
       <form
         onSubmit={changePassword}
@@ -140,6 +187,20 @@ export default function Profile() {
           {saving ? "Saving..." : "Update Password"}
         </button>
       </form>
+
+      {/* Danger zone */}
+      <div className="mt-6 bg-red-50/60 dark:bg-red-900/20 backdrop-blur-xl border border-red-200 dark:border-red-900 rounded-2xl shadow-lg p-6 max-w-xl">
+        <h3 className="text-lg font-semibold text-red-700 dark:text-red-300 mb-2">Danger Zone ⚠️</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+          Deleting your account removes all your tasks, notes and expenses permanently. This cannot be undone.
+        </p>
+        <button
+          onClick={deleteAccount}
+          className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-lg transition"
+        >
+          Delete My Account
+        </button>
+      </div>
 
     </div>
   );

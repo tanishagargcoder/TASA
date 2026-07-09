@@ -7,6 +7,7 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -57,14 +58,24 @@ export default function Login() {
           required
         />
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-3 rounded-xl mb-6 border border-gray-300 dark:border-gray-600 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="relative mb-6">
+          <input
+            type={showPass ? "text" : "password"}
+            placeholder="Password"
+            className="w-full p-3 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPass(!showPass)}
+            title={showPass ? "Hide password" : "Show password"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-70 hover:opacity-100"
+          >
+            {showPass ? "🙈" : "👁️"}
+          </button>
+        </div>
 
         <button
           type="submit"

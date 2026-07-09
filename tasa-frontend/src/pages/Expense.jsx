@@ -156,6 +156,32 @@ export default function Expense() {
     toast("Expense deleted 🗑️");
   };
 
+  const exportCSV = (rows) => {
+    if (rows.length === 0) {
+      toast("Nothing to export", "error");
+      return;
+    }
+
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [
+      ["Date", "Category", "Note", "Amount (INR)"].join(","),
+      ...rows.map(e => [
+        esc(new Date(e.date || e.createdAt).toLocaleDateString("en-IN")),
+        esc(e.category),
+        esc(e.note),
+        e.amount
+      ].join(","))
+    ];
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `tasa-expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("CSV downloaded 📥");
+  };
+
   // Month options: current + previous 5 months + all time
   const now = new Date();
   const monthOptions = Array.from({ length: 6 }, (_, i) => {
@@ -193,18 +219,28 @@ export default function Expense() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Expenses 💸</h2>
 
-        {/* Month selector */}
-        <select
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className={inputCls + " py-2"}
-        >
-          <option value="current">This Month</option>
-          {monthOptions.slice(1).map(m => (
-            <option key={m.value} value={m.value}>{m.label}</option>
-          ))}
-          <option value="all">All Time</option>
-        </select>
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Month selector */}
+          <select
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className={inputCls + " py-2"}
+          >
+            <option value="current">This Month</option>
+            {monthOptions.slice(1).map(m => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+            <option value="all">All Time</option>
+          </select>
+
+          <button
+            onClick={() => exportCSV(visible)}
+            title="Download visible expenses as CSV"
+            className="px-4 py-2 rounded-xl text-sm bg-white/40 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-white/20 transition"
+          >
+            📥 Export CSV
+          </button>
+        </div>
       </div>
 
       {error && (

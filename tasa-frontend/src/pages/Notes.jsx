@@ -86,6 +86,15 @@ export default function Notes() {
     toast(res.data.pinned ? "Note pinned 📌" : "Note unpinned");
   };
 
+  const copyNote = async (note) => {
+    try {
+      await navigator.clipboard.writeText(note.text);
+      toast("Copied to clipboard 📋");
+    } catch {
+      toast("Could not copy", "error");
+    }
+  };
+
   const startEdit = (note) => {
     setText(note.text);
     setColor(note.color || "yellow");
@@ -223,6 +232,13 @@ export default function Notes() {
                 </span>
 
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => copyNote(note)}
+                    title="Copy note"
+                    className="px-3 py-1 rounded-lg text-sm bg-white/70 border border-gray-300 text-gray-700 hover:bg-white dark:bg-gray-800/60 dark:border-gray-600 dark:text-gray-200 transition"
+                  >
+                    📋
+                  </button>
                   <button
                     onClick={() => togglePin(note)}
                     title={note.pinned ? "Unpin" : "Pin"}

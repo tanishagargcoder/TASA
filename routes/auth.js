@@ -195,6 +195,27 @@ router.get("/me", authMiddleware, async (req, res) => {
 });
 
 
+// ================= UPDATE PROFILE (name / monthly budget) =================
+router.put("/me", authMiddleware, async (req, res) => {
+  try {
+    const updates = {};
+    if (req.body.name !== undefined && req.body.name.trim()) {
+      updates.name = req.body.name.trim();
+    }
+    if (req.body.monthlyBudget !== undefined) {
+      updates.monthlyBudget = Math.max(0, Number(req.body.monthlyBudget) || 0);
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true })
+      .select("-password");
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // ================= DELETE ACCOUNT (AND ALL USER DATA) =================
 router.delete("/me", authMiddleware, async (req, res) => {
   try {

@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
+import { useToast } from "../context/ToastContext";
 
 export default function Profile() {
 
   const [user, setUser] = useState(null);
   const [counts, setCounts] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editBudget, setEditBudget] = useState("");
   const [oldPassword, setOldPassword] = useState("");
+  const toast = useToast();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState(null); // { type: "ok" | "error", text }
@@ -25,6 +29,8 @@ export default function Profile() {
         axios.get(`${API_URL}/api/expenses`, { headers }),
       ]);
       setUser(userRes.data);
+      setEditName(userRes.data?.name || "");
+      setEditBudget(userRes.data?.monthlyBudget ? String(userRes.data.monthlyBudget) : "");
       setCounts({
         tasks: Array.isArray(tasksRes.data) ? tasksRes.data.length : 0,
         notes: Array.isArray(notesRes.data) ? notesRes.data.length : 0,
@@ -34,6 +40,21 @@ export default function Profile() {
       setMessage({ type: "error", text: "Could not load profile" });
     }
   }, [token]);
+
+  const saveProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put(
+        `${API_URL}/api/auth/me`,
+        { name: editName, monthlyBudget: Number(editBudget) || 0 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUser(res.data);
+      toast("Profile updated ✨");
+    } catch {
+      toast("Could not update profile", "error");
+    }
+  };
 
   const deleteAccount = async () => {
     if (!window.confirm("This will permanently delete your account and ALL your tasks, notes and expenses. Continue?")) return;
@@ -114,6 +135,42 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Edit profile */}
+      <form
+        onSubmit={saveProfile}
+        className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 mb-6 max-w-xl"
+      >
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Edit Profile ✏️</h3>
+
+        <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Display name</label>
+        <input
+          type="text"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          required
+          className="w-full p-3 rounded-xl mb-4 border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
+        />
+
+        <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">
+          Monthly budget (₹) — shows a budget bar on the Expenses page; 0 = off
+        </label>
+        <input
+          type="number"
+          min="0"
+          placeholder="e.g. 5000"
+          value={editBudget}
+          onChange={(e) => setEditBudget(e.target.value)}
+          className="w-full p-3 rounded-xl mb-4 border border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
+        />
+
+        <button
+          type="submit"
+          className="px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition duration-300"
+        >
+          Save Profile
+        </button>
+      </form>
 
       {/* Account stats */}
       {counts && (

@@ -11,6 +11,7 @@ const priorityStyles = {
 export default function Tasks() {
 
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [dueDate, setDueDate] = useState("");
   const [category, setCategory] = useState("");
@@ -42,6 +43,7 @@ export default function Tasks() {
 
   const resetForm = () => {
     setTitle("");
+    setDescription("");
     setPriority("Medium");
     setDueDate("");
     setCategory("");
@@ -54,6 +56,7 @@ export default function Tasks() {
 
     const body = JSON.stringify({
       title,
+      description: description.trim(),
       priority,
       dueDate: dueDate || null,
       category: category.trim()
@@ -86,6 +89,7 @@ export default function Tasks() {
   const startEdit = (task) => {
     setEditingId(task._id);
     setTitle(task.title);
+    setDescription(task.description || "");
     setPriority(task.priority || "Medium");
     setDueDate(task.dueDate ? task.dueDate.slice(0, 10) : "");
     setCategory(task.category || "");
@@ -220,6 +224,14 @@ export default function Tasks() {
             Cancel
           </button>
         )}
+
+        <input
+          value={description}
+          placeholder="Description (optional)"
+          onChange={(e) => setDescription(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && saveTask()}
+          className={`w-full ${inputCls}`}
+        />
       </div>
 
       {/* Filter tabs + search */}
@@ -287,6 +299,11 @@ export default function Tasks() {
               <p className={`font-medium ${task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"}`}>
                 {task.title}
               </p>
+              {task.description && (
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
+                  {task.description}
+                </p>
+              )}
               {task.dueDate && (
                 <p className={`text-xs mt-1 ${isOverdue(task) ? "text-red-600 dark:text-red-400 font-semibold" : "text-gray-500 dark:text-gray-400"}`}>
                   Due: {new Date(task.dueDate).toLocaleDateString()}

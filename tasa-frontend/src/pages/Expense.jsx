@@ -103,6 +103,8 @@ export default function Expense() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [note, setNote] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [budget, setBudget] = useState(0);
   const [error, setError] = useState("");
   const [month, setMonth] = useState("current"); // "current", "all", or "YYYY-M"
   const toast = useToast();
@@ -113,10 +115,13 @@ export default function Expense() {
 
   const fetchExpenses = useCallback(async () => {
     try {
-      const res = await axios.get(API, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setExpenses(Array.isArray(res.data) ? res.data : []);
+      const headers = { Authorization: `Bearer ${token}` };
+      const [expRes, userRes] = await Promise.all([
+        axios.get(API, { headers }),
+        axios.get(`${API_URL}/api/auth/me`, { headers }),
+      ]);
+      setExpenses(Array.isArray(expRes.data) ? expRes.data : []);
+      setBudget(Number(userRes.data?.monthlyBudget) || 0);
     } catch {
       setError("Could not load expenses");
     }
@@ -126,7 +131,14 @@ export default function Expense() {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  const addExpense = async () => {
+  const resetForm = () => {
+    setAmount("");
+    setNote("");
+    setCategory("Food");
+    setEditingId(null);
+  };
+
+  const saveExpense = async () => {
     if (!amount || Number(amount) <= 0) {
       setError("Please enter a valid amount");
       return;
@@ -134,19 +146,34 @@ export default function Expense() {
     setError("");
 
     try {
-      const res = await axios.post(
-        API,
-        { amount: Number(amount), category, note },
-        authHeaders
-      );
-
-      setExpenses([res.data, ...expenses]);
-      setAmount("");
-      setNote("");
-      toast(`Expense added — ₹${Number(res.data.amount).toLocaleString("en-IN")} 💸`);
+      if (editingId) {
+        const res = await axios.put(
+          `${API}/${editingId}`,
+          { amount: Number(amount), category, note },
+          authHeaders
+        );
+        setExpenses(expenses.map(e => (e._id === editingId ? res.data : e)));
+        toast("Expense updated ✏️");
+      } else {
+        const res = await axios.post(
+          API,
+          { amount: Number(amount), category, note },
+          authHeaders
+        );
+        setExpenses([res.data, ...expenses]);
+        toast(`Expense added — ₹${Number(res.data.amount).toLocaleString("en-IN")} 💸`);
+      }
+      resetForm();
     } catch {
       setError("Could not save expense");
     }
+  };
+
+  const startEdit = (e) => {
+    setEditingId(e._id);
+    setAmount(String(e.amount));
+    setCategory(e.category || "Other");
+    setNote(e.note || "");
   };
 
   const deleteExpense = async (id) => {
@@ -265,6 +292,36 @@ export default function Expense() {
         ) : (
           <DonutChart data={byCategory} total={periodTotal} />
         )}
+
+        {/* Budget bar — current month only */}
+        {budget > 0 && month === "current" && (
+          <div className="mt-5 pt-4 border-t border-white/40 dark:border-white/10">
+            <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300 mb-1">
+              <span>Monthly Budget</span>
+              <span>
+                ₹{periodTotal.toLocaleString("en-IN")} / ₹{budget.toLocaleString("en-IN")}
+                {" "}({Math.round((periodTotal / budget) * 100)}%)
+              </span>
+            </div>
+            <div className="w-full h-2.5 bg-white/40 dark:bg-white/10 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  periodTotal > budget
+                    ? "bg-red-500"
+                    : periodTotal > budget * 0.8
+                    ? "bg-amber-500"
+                    : "bg-green-500"
+                }`}
+                style={{ width: `${Math.min((periodTotal / budget) * 100, 100)}%` }}
+              />
+            </div>
+            {periodTotal > budget && (
+              <p className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
+                ⚠️ Budget exceeded by ₹{(periodTotal - budget).toLocaleString("en-IN")}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add form */}
@@ -292,16 +349,25 @@ export default function Expense() {
           placeholder="Note (optional)"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addExpense()}
+          onKeyDown={(e) => e.key === "Enter" && saveExpense()}
           className={`flex-1 min-w-[150px] ${inputCls}`}
         />
 
         <button
-          onClick={addExpense}
+          onClick={saveExpense}
           className="px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition duration-300"
         >
-          Add
+          {editingId ? "Save" : "Add"}
         </button>
+
+        {editingId && (
+          <button
+            onClick={resetForm}
+            className="px-4 py-3 rounded-xl bg-white/60 dark:bg-gray-800/60 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-white/80 transition"
+          >
+            Cancel
+          </button>
+        )}
       </div>
 
       {/* Expense history */}
@@ -333,6 +399,13 @@ export default function Expense() {
             <span className="font-bold text-gray-800 dark:text-gray-100">
               ₹{Number(e.amount).toLocaleString("en-IN")}
             </span>
+
+            <button
+              onClick={() => startEdit(e)}
+              className="px-3 py-1 rounded-lg text-sm bg-white/60 dark:bg-gray-800/60 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-white/90 transition"
+            >
+              Edit
+            </button>
 
             <button
               onClick={() => deleteExpense(e._id)}

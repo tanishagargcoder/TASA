@@ -14,8 +14,11 @@ router.post("/", authMiddleware, async (req, res) => {
       priority: req.body.priority,
       dueDate: req.body.dueDate,
       category: req.body.category,
+      status: req.body.status,
       userId: req.user.id
     });
+
+    if (task.status === "done") task.completed = true;
 
     await task.save();
     res.status(201).json(task);
@@ -46,6 +49,7 @@ router.put("/toggle/:id", authMiddleware, async (req, res) => {
     }
 
     task.completed = !task.completed;
+    task.status = task.completed ? "done" : "todo";
     await task.save();
 
     res.json(task);
@@ -77,9 +81,16 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const updates = {};
-    ["title", "description", "priority", "dueDate", "completed", "category"].forEach((field) => {
+    ["title", "description", "priority", "dueDate", "completed", "category", "status"].forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
+
+    // Keep status and completed in sync whichever one was sent
+    if (updates.status !== undefined) {
+      updates.completed = updates.status === "done";
+    } else if (updates.completed !== undefined) {
+      updates.status = updates.completed ? "done" : "todo";
+    }
 
     const updated = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },

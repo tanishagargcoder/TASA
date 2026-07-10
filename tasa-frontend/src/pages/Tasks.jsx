@@ -2,6 +2,15 @@ import { useEffect, useState, useCallback } from "react";
 import { API_URL } from "../config";
 import { useToast } from "../context/ToastContext";
 
+const COLUMNS = [
+  { key: "todo", label: "📋 To Do", bar: "bg-blue-400" },
+  { key: "inprogress", label: "⚡ In Progress", bar: "bg-amber-400" },
+  { key: "done", label: "✅ Done", bar: "bg-green-400" },
+];
+
+// Old tasks (created before the board existed) have no status field
+const statusOf = (t) => t.status || (t.completed ? "done" : "todo");
+
 const priorityStyles = {
   High: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800",
   Medium: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800",
@@ -20,7 +29,15 @@ export default function Tasks() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [view, setView] = useState(
+    () => localStorage.getItem("taskView") || "list"
+  );
   const toast = useToast();
+
+  const switchView = (v) => {
+    setView(v);
+    localStorage.setItem("taskView", v);
+  };
 
   const token = localStorage.getItem("token");
 
@@ -105,6 +122,29 @@ export default function Tasks() {
     getTasks();
   };
 
+  const moveTask = async (task, newStatus) => {
+    if (statusOf(task) === newStatus) return;
+
+    // optimistic update so drag feels instant
+    setTasks(tasks.map(t =>
+      t._id === task._id
+        ? { ...t, status: newStatus, completed: newStatus === "done" }
+        : t
+    ));
+
+    await fetch(`${API_URL}/api/tasks/${task._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    if (newStatus === "done") toast("Task completed 🎉");
+    getTasks();
+  };
+
   const clearCompleted = async () => {
     const done = tasks.filter(t => t.completed);
     if (done.length === 0) return;
@@ -161,11 +201,34 @@ export default function Tasks() {
   return (
     <div className="fade-up">
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Tasks ✅</h2>
-        <span className="text-sm text-gray-600 dark:text-gray-300">
-          {pending} pending · {tasks.length} total
-        </span>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {pending} pending · {tasks.length} total
+          </span>
+
+          {/* List / Board toggle */}
+          <div className="flex gap-1 bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-xl p-1">
+            {[
+              { key: "list", label: "☰ List" },
+              { key: "board", label: "▦ Board" },
+            ].map(v => (
+              <button
+                key={v.key}
+                onClick={() => switchView(v.key)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                  view === v.key
+                    ? "bg-white/70 dark:bg-white/20 shadow text-gray-800 dark:text-gray-100"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-white/10"
+                }`}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {error && (
@@ -234,6 +297,7 @@ export default function Tasks() {
         />
       </div>
 
+      {view === "list" && (<>
       {/* Filter tabs + search */}
       <div className="flex flex-wrap gap-3 items-center mb-4">
         <div className="flex gap-1 bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-xl p-1">
@@ -338,6 +402,115 @@ export default function Tasks() {
           </div>
         ))}
       </div>
+      </>)}
+
+      {/* Kanban board */}
+      {view === "board" && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+          {COLUMNS.map(col => {
+            const colTasks = tasks.filter(t => statusOf(t) === col.key);
+            const colIndex = COLUMNS.findIndex(c => c.key === col.key);
+
+            return (
+              <div
+                key={col.key}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const id = e.dataTransfer.getData("text/plain");
+                  const t = tasks.find(x => x._id === id);
+                  if (t) moveTask(t, col.key);
+                }}
+                className="bg-white/20 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-3 min-h-[260px]"
+              >
+                <div className={`h-1.5 rounded-full ${col.bar} mb-3`} />
+
+                <div className="flex justify-between items-center mb-3 px-1">
+                  <span className="font-semibold text-sm text-gray-800 dark:text-gray-100">
+                    {col.label}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/50 dark:bg-white/10 text-gray-600 dark:text-gray-300">
+                    {colTasks.length}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {colTasks.length === 0 && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-6">
+                      Drop tasks here
+                    </p>
+                  )}
+
+                  {colTasks.map(task => (
+                    <div
+                      key={task._id}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData("text/plain", task._id)}
+                      className="bg-white/50 dark:bg-gray-800/60 backdrop-blur-xl border border-white/60 dark:border-white/10 rounded-xl shadow p-3 cursor-grab active:cursor-grabbing hover:shadow-lg transition"
+                    >
+                      <p className={`text-sm font-medium ${col.key === "done" ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"}`}>
+                        {task.title}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${priorityStyles[task.priority] || priorityStyles.Medium}`}>
+                          {task.priority || "Medium"}
+                        </span>
+                        {task.category && (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800">
+                            #{task.category}
+                          </span>
+                        )}
+                        {task.dueDate && (
+                          <span className={`text-[10px] ${isOverdue(task) ? "text-red-600 dark:text-red-400 font-semibold" : "text-gray-500 dark:text-gray-400"}`}>
+                            📅 {new Date(task.dueDate).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Move arrows (works on mobile where drag doesn't) */}
+                      <div className="flex justify-between items-center mt-2">
+                        <button
+                          onClick={() => colIndex > 0 && moveTask(task, COLUMNS[colIndex - 1].key)}
+                          disabled={colIndex === 0}
+                          title="Move left"
+                          className="px-2 py-0.5 rounded-lg text-xs bg-white/60 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 disabled:opacity-30 hover:bg-white transition"
+                        >
+                          ◀
+                        </button>
+
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => startEdit(task)}
+                            className="px-2 py-0.5 rounded-lg text-xs bg-white/60 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-white transition"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => deleteTask(task._id)}
+                            className="px-2 py-0.5 rounded-lg text-xs bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-800 text-red-500 dark:text-red-300 hover:bg-red-100 transition"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => colIndex < COLUMNS.length - 1 && moveTask(task, COLUMNS[colIndex + 1].key)}
+                          disabled={colIndex === COLUMNS.length - 1}
+                          title="Move right"
+                          className="px-2 py-0.5 rounded-lg text-xs bg-white/60 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 disabled:opacity-30 hover:bg-white transition"
+                        >
+                          ▶
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
     </div>
   );

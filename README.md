@@ -31,8 +31,10 @@ A full-stack **MERN productivity app** to manage your tasks, notes and expenses 
 - **Monthly budget** with progress bar and over-budget warning
 - Export to **CSV**
 
-### 📊 Dashboard
+### 📊 Dashboard & Analytics
 - Live stats: total tasks, monthly spend, recent notes
+- **Productivity score** (0–100 ring) and **daily streak counter** 🔥
+- **GitHub-style activity heatmap** (last 15 weeks)
 - Task progress bar, spending charts (by category + last 7 days)
 - Overdue / due-today reminder banners, quick actions
 - Time-based greeting 👋

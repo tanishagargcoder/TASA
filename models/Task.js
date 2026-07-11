@@ -10,6 +10,7 @@ const taskSchema = new mongoose.Schema(
       enum: ["todo", "inprogress", "done"],
       default: "todo"
     },
+    completedAt: { type: Date, default: null },
     priority: {
       type: String,
       enum: ["High", "Medium", "Low"],

@@ -50,6 +50,7 @@ router.put("/toggle/:id", authMiddleware, async (req, res) => {
 
     task.completed = !task.completed;
     task.status = task.completed ? "done" : "todo";
+    task.completedAt = task.completed ? new Date() : null;
     await task.save();
 
     res.json(task);
@@ -90,6 +91,13 @@ router.put("/:id", authMiddleware, async (req, res) => {
       updates.completed = updates.status === "done";
     } else if (updates.completed !== undefined) {
       updates.status = updates.completed ? "done" : "todo";
+    }
+
+    // Track completion time for activity analytics
+    if (updates.completed === true) {
+      updates.completedAt = new Date();
+    } else if (updates.completed === false) {
+      updates.completedAt = null;
     }
 
     const updated = await Task.findOneAndUpdate(

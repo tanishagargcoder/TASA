@@ -8,6 +8,14 @@ import { API_URL } from "../config";
 
 const CATEGORIES = ["Food", "Travel", "Shopping", "Bills", "Other"];
 
+function heatColor(count) {
+  if (count === 0) return "bg-white/40 dark:bg-white/10";
+  if (count === 1) return "bg-rose-200 dark:bg-rose-900";
+  if (count === 2) return "bg-rose-300 dark:bg-rose-700";
+  if (count === 3) return "bg-rose-400 dark:bg-rose-600";
+  return "bg-rose-500";
+}
+
 function greeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -29,6 +37,9 @@ export default function Dashboard() {
     last7Days: [],
     overdue: [],
     dueToday: [],
+    heatDays: [],
+    streak: 0,
+    score: 0,
   });
 
   const token = localStorage.getItem("token");
@@ -89,6 +100,56 @@ export default function Dashboard() {
         };
       });
 
+      // ===== Activity analytics: heatmap, streak, productivity score =====
+      const dayKey = (d) => {
+        const x = new Date(d);
+        return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`;
+      };
+
+      const activity = {};
+      const bump = (d) => {
+        if (!d) return;
+        const k = dayKey(d);
+        activity[k] = (activity[k] || 0) + 1;
+      };
+
+      taskList.forEach((t) => bump(t.completedAt || (t.completed ? t.updatedAt : null)));
+      noteList.forEach((n) => bump(n.createdAt));
+      expenseList.forEach((e) => bump(e.date || e.createdAt));
+
+      // Last 15 weeks of daily activity (ends today)
+      const heatDays = [];
+      for (let i = 7 * 15 - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        heatDays.push({
+          count: activity[dayKey(d)] || 0,
+          label: d.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+        });
+      }
+
+      // Streak: consecutive active days ending today (yesterday counts as grace)
+      let streak = 0;
+      const cursor = new Date();
+      if (!activity[dayKey(cursor)]) cursor.setDate(cursor.getDate() - 1);
+      while (activity[dayKey(cursor)]) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      // Productivity score /100: 40 completion rate + 40 active days (last 7) + 20 streak
+      const doneCount = taskList.filter((t) => t.completed).length;
+      const completionPts = taskList.length > 0 ? (doneCount / taskList.length) * 40 : 0;
+      let activeDays7 = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        if (activity[dayKey(d)]) activeDays7++;
+      }
+      const score = Math.round(
+        completionPts + (activeDays7 / 7) * 40 + Math.min(streak, 10) * 2
+      );
+
       const pendingWithDue = taskList.filter((t) => !t.completed && t.dueDate);
       const overdue = pendingWithDue.filter(
         (t) => new Date(t.dueDate) < todayStart
@@ -106,6 +167,9 @@ export default function Dashboard() {
         last7Days,
         overdue,
         dueToday,
+        heatDays,
+        streak,
+        score,
       });
     } catch {
       // overview stats are best-effort; modules load their own data
@@ -341,6 +405,94 @@ export default function Dashboard() {
                   </div>
                 </div>
               )}
+
+              {/* Productivity score + streak */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+
+                <div className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg flex items-center gap-5">
+                  <svg viewBox="0 0 100 100" className="w-24 h-24 shrink-0">
+                    <circle
+                      cx="50" cy="50" r="42" fill="none" strokeWidth="10"
+                      className="stroke-white/50 dark:stroke-white/10"
+                    />
+                    <circle
+                      cx="50" cy="50" r="42" fill="none" strokeWidth="10"
+                      stroke="#f43f5e" strokeLinecap="round"
+                      strokeDasharray={`${(stats.score / 100) * 2 * Math.PI * 42} ${2 * Math.PI * 42}`}
+                      transform="rotate(-90 50 50)"
+                      style={{ transition: "stroke-dasharray 0.6s ease" }}
+                    />
+                    <text
+                      x="50" y="57" textAnchor="middle" fontSize="24" fontWeight="700"
+                      className="fill-gray-800 dark:fill-gray-100"
+                    >
+                      {stats.score}
+                    </text>
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      Productivity Score 🎯
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Based on task completion, active days this week and your streak.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg flex items-center gap-5">
+                  <span className="text-5xl">🔥</span>
+                  <div>
+                    <p className="text-4xl font-bold text-gray-800 dark:text-gray-100">
+                      {stats.streak} <span className="text-lg font-semibold">day{stats.streak !== 1 ? "s" : ""}</span>
+                    </p>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mt-1">Current Streak</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {stats.streak === 0
+                        ? "Complete a task or add a note today to start one!"
+                        : "Keep it going — do anything in TASA today."}
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Activity heatmap */}
+              <div className="mt-6 bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg">
+                <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    Activity — Last 15 Weeks 🟩
+                  </p>
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                    Less
+                    {[0, 1, 2, 3, 4].map((c) => (
+                      <span key={c} className={`w-3 h-3 rounded-sm ${heatColor(c)}`} />
+                    ))}
+                    More
+                  </div>
+                </div>
+
+                <div className="flex gap-1 overflow-x-auto pb-1">
+                  {Array.from({ length: 15 }).map((_, w) => (
+                    <div key={w} className="flex flex-col gap-1">
+                      {Array.from({ length: 7 }).map((_, d) => {
+                        const day = stats.heatDays[w * 7 + d];
+                        if (!day) return <span key={d} className="w-3.5 h-3.5" />;
+                        return (
+                          <span
+                            key={d}
+                            title={`${day.label}: ${day.count} ${day.count === 1 ? "activity" : "activities"}`}
+                            className={`w-3.5 h-3.5 rounded-sm ${heatColor(day.count)} hover:ring-2 hover:ring-rose-400 transition`}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                  Tasks completed, notes written and expenses logged — every action counts.
+                </p>
+              </div>
 
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

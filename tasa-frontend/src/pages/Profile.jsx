@@ -148,7 +148,12 @@ export default function Profile() {
   return (
     <div className="fade-up">
 
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Profile 👤</h2>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Profile 👤</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+          Your account, progress and settings.
+        </p>
+      </div>
 
       {/* User info */}
       <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 mb-6 max-w-xl">

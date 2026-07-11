@@ -218,7 +218,12 @@ export default function Tasks() {
     <div className="fade-up">
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Tasks ✅</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Tasks ✅</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            Plan, prioritize and get things done.
+          </p>
+        </div>
 
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-600 dark:text-gray-300">

@@ -28,6 +28,9 @@ function beep() {
   }
 }
 
+const fmtHours = (min) =>
+  min >= 60 ? `${Math.floor(min / 60)}h ${min % 60 > 0 ? `${min % 60}m` : ""}`.trim() : `${min}m`;
+
 export default function Focus() {
 
   const [preset, setPreset] = useState(PRESETS[0]);
@@ -74,7 +77,7 @@ export default function Focus() {
     if (running) {
       const m = Math.floor(secondsLeft / 60);
       const s = String(secondsLeft % 60).padStart(2, "0");
-      document.title = `${m}:${s} ${mode === "work" ? "⏳ Focus" : "☕ Break"} — TASA`;
+      document.title = `${m}:${s} ${mode === "work" ? "• Focus" : "• Break"} — TASA`;
     } else {
       document.title = "TASA — Track & Simplify Activities";
     }
@@ -94,11 +97,11 @@ export default function Focus() {
       axios.post(`${API_URL}/api/focus`, { minutes: preset.minutes }, authHeaders)
         .then(() => fetchSessions())
         .catch(() => {});
-      toast(`Focus session done — ${preset.minutes} min logged! Take a ${preset.break} min break ☕`);
+      toast(`${preset.minutes} min focus session logged — time for a ${preset.break} min break ☕`);
       setMode("break");
       setSecondsLeft(preset.break * 60);
     } else {
-      toast("Break over — ready for the next round? 💪");
+      toast("Break over — ready for the next session 💪");
       setMode("work");
       setSecondsLeft(preset.minutes * 60);
     }
@@ -121,7 +124,7 @@ export default function Focus() {
     setSecondsLeft(p.minutes * 60);
   };
 
-  // stats
+  // ===== stats =====
   const dayKey = (d) => new Date(d).toDateString();
   const today = new Date().toDateString();
   const todayMinutes = sessions
@@ -134,8 +137,21 @@ export default function Focus() {
     .filter((s) => new Date(s.date) >= weekAgo)
     .reduce((sum, s) => sum + s.minutes, 0);
 
-  const fmtHours = (min) =>
-    min >= 60 ? `${Math.floor(min / 60)}h ${min % 60}m` : `${min}m`;
+  const totalMinutes = sessions.reduce((sum, s) => sum + s.minutes, 0);
+
+  // last 7 days, oldest → newest
+  const last7 = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const minutes = sessions
+      .filter((s) => dayKey(s.date) === d.toDateString())
+      .reduce((sum, s) => sum + s.minutes, 0);
+    return {
+      label: d.toLocaleDateString("en-IN", { weekday: "short" }),
+      minutes,
+    };
+  });
+  const maxDay = Math.max(...last7.map((d) => d.minutes), 1);
 
   // ring geometry
   const R = 88;
@@ -144,20 +160,36 @@ export default function Focus() {
   const mm = Math.floor(secondsLeft / 60);
   const ss = String(secondsLeft % 60).padStart(2, "0");
 
+  const statTile = (value, label) => (
+    <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-4 text-center">
+      <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{value}</p>
+      <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{label}</p>
+    </div>
+  );
+
   return (
     <div className="fade-up">
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Focus ⏳</h2>
-        <span className="text-sm text-gray-600 dark:text-gray-300">
-          Today: {fmtHours(todayMinutes)} · This week: {fmtHours(weekMinutes)}
-        </span>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+          Deep work, one session at a time.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
         {/* Timer card */}
         <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-8 flex flex-col items-center">
+
+          {/* Mode indicator */}
+          <span className={`text-xs font-semibold px-3 py-1 rounded-full mb-5 ${
+            mode === "work"
+              ? "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300"
+              : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
+          }`}>
+            {mode === "work" ? "FOCUS SESSION" : "BREAK"}
+          </span>
 
           {/* Preset picker */}
           <div className="flex gap-2 mb-6">
@@ -171,7 +203,7 @@ export default function Focus() {
                     : "bg-white/50 dark:bg-white/10 text-gray-700 dark:text-gray-200 border border-white/60 dark:border-white/10 hover:bg-white/70"
                 }`}
               >
-                {p.label}
+                {p.label} <span className="opacity-70">+ {p.break} break</span>
               </button>
             ))}
           </div>
@@ -191,16 +223,10 @@ export default function Focus() {
               style={{ transition: "stroke-dasharray 0.9s linear" }}
             />
             <text
-              x="100" y="100" textAnchor="middle" fontSize="40" fontWeight="700"
+              x="100" y="106" textAnchor="middle" fontSize="42" fontWeight="700"
               className="fill-gray-800 dark:fill-gray-100"
             >
               {mm}:{ss}
-            </text>
-            <text
-              x="100" y="128" textAnchor="middle" fontSize="13"
-              className="fill-gray-500 dark:fill-gray-400"
-            >
-              {mode === "work" ? "⏳ Focus time" : "☕ Break time"}
             </text>
           </svg>
 
@@ -209,14 +235,14 @@ export default function Focus() {
             {!running ? (
               <button
                 onClick={start}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition"
+                className="px-10 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition"
               >
                 {secondsLeft === totalSeconds ? "Start" : "Resume"}
               </button>
             ) : (
               <button
                 onClick={pause}
-                className="px-8 py-3 rounded-xl bg-white/60 dark:bg-gray-800/60 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600 font-semibold shadow hover:bg-white/80 transition"
+                className="px-10 py-3 rounded-xl bg-white/60 dark:bg-gray-800/60 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600 font-semibold shadow hover:bg-white/80 transition"
               >
                 Pause
               </button>
@@ -229,38 +255,69 @@ export default function Focus() {
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-            Timer chalte waqt ye page khula rakhna — tab title me countdown dikhta rahega.
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-5 text-center">
+            Keep this tab open while the timer runs — the countdown stays visible in the tab title.
           </p>
         </div>
 
-        {/* Stats card */}
+        {/* Stats column */}
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-5 text-center">
-              <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{fmtHours(todayMinutes)}</p>
-              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">Focused Today</p>
-            </div>
-            <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-5 text-center">
-              <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{fmtHours(weekMinutes)}</p>
-              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">This Week</p>
-            </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            {statTile(fmtHours(todayMinutes), "Today")}
+            {statTile(fmtHours(weekMinutes), "This Week")}
+            {statTile(fmtHours(totalMinutes), "All Time")}
+          </div>
+
+          {/* Last 7 days chart */}
+          <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-5">
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
+              Focus — Last 7 Days
+            </p>
+
+            {weekMinutes === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No sessions this week yet — start your first one.
+              </p>
+            ) : (
+              <div className="flex items-end gap-2 h-28">
+                {last7.map((d, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 flex flex-col items-center justify-end h-full"
+                    title={`${d.label}: ${fmtHours(d.minutes)}`}
+                  >
+                    <div
+                      className="w-full max-w-[26px] bg-gradient-to-t from-rose-500 to-pink-400 rounded-t-md transition-all duration-500 hover:opacity-80"
+                      style={{
+                        height: `${(d.minutes / maxDay) * 100}%`,
+                        minHeight: d.minutes > 0 ? "4px" : "0",
+                      }}
+                    />
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{d.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Recent sessions */}
           <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-5">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Recent Sessions</p>
+            <div className="flex justify-between items-center mb-3">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Recent Sessions</p>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{sessions.length} total</span>
+            </div>
 
             {sessions.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                No sessions yet — start your first 25 minutes! 🌸
+                Nothing logged yet — your completed sessions will appear here.
               </p>
             ) : (
               <div className="space-y-2">
                 {sessions.slice(0, 6).map((s) => (
-                  <div key={s._id} className="flex justify-between text-sm">
-                    <span className="text-gray-700 dark:text-gray-200">⏳ {s.minutes} min</span>
-                    <span className="text-gray-500 dark:text-gray-400">
+                  <div key={s._id} className="flex justify-between items-center text-sm border-b border-white/30 dark:border-white/10 last:border-0 pb-2 last:pb-0">
+                    <span className="text-gray-700 dark:text-gray-200 font-medium">{s.minutes} min</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-xs">
                       {new Date(s.date).toLocaleString("en-IN", {
                         day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
                       })}

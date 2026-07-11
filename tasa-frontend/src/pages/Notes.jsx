@@ -131,8 +131,13 @@ export default function Notes() {
   return (
     <div className="fade-up">
 
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Notes 📝</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Notes 📝</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            Capture ideas before they fade.
+          </p>
+        </div>
         <span className="text-sm text-gray-600 dark:text-gray-300">{notes.length} notes</span>
       </div>
 

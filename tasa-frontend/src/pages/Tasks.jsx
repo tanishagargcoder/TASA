@@ -24,6 +24,7 @@ export default function Tasks() {
   const [priority, setPriority] = useState("Medium");
   const [dueDate, setDueDate] = useState("");
   const [category, setCategory] = useState("");
+  const [recurrence, setRecurrence] = useState("none");
   const [editingId, setEditingId] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
@@ -64,6 +65,7 @@ export default function Tasks() {
     setPriority("Medium");
     setDueDate("");
     setCategory("");
+    setRecurrence("none");
     setEditingId(null);
   };
 
@@ -76,7 +78,8 @@ export default function Tasks() {
       description: description.trim(),
       priority,
       dueDate: dueDate || null,
-      category: category.trim()
+      category: category.trim(),
+      recurrence
     });
 
     try {
@@ -110,6 +113,7 @@ export default function Tasks() {
     setPriority(task.priority || "Medium");
     setDueDate(task.dueDate ? task.dueDate.slice(0, 10) : "");
     setCategory(task.category || "");
+    setRecurrence(task.recurrence || "none");
   };
 
   const deleteTask = async (id) => {
@@ -141,7 +145,13 @@ export default function Tasks() {
       body: JSON.stringify({ status: newStatus })
     });
 
-    if (newStatus === "done") toast("Task completed 🎉");
+    if (newStatus === "done") {
+      toast(
+        task.recurrence && task.recurrence !== "none"
+          ? `Task completed 🎉 Next ${task.recurrence} one created 🔁`
+          : "Task completed 🎉"
+      );
+    }
     getTasks();
   };
 
@@ -165,7 +175,13 @@ export default function Tasks() {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!task.completed) toast("Task completed 🎉");
+    if (!task.completed) {
+      toast(
+        task.recurrence && task.recurrence !== "none"
+          ? `Task completed 🎉 Next ${task.recurrence} one created 🔁`
+          : "Task completed 🎉"
+      );
+    }
     getTasks();
   };
 
@@ -271,6 +287,18 @@ export default function Tasks() {
           onKeyDown={(e) => e.key === "Enter" && saveTask()}
           className={`w-36 ${inputCls}`}
         />
+
+        <select
+          value={recurrence}
+          onChange={(e) => setRecurrence(e.target.value)}
+          title="Repeat this task"
+          className={inputCls}
+        >
+          <option value="none">No repeat</option>
+          <option value="daily">🔁 Daily</option>
+          <option value="weekly">🔁 Weekly</option>
+          <option value="monthly">🔁 Monthly</option>
+        </select>
 
         <button
           onClick={saveTask}
@@ -382,6 +410,12 @@ export default function Tasks() {
               </span>
             )}
 
+            {task.recurrence && task.recurrence !== "none" && (
+              <span className="text-xs font-medium px-3 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800 capitalize">
+                🔁 {task.recurrence}
+              </span>
+            )}
+
             <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${priorityStyles[task.priority] || priorityStyles.Medium}`}>
               {task.priority || "Medium"}
             </span>
@@ -459,6 +493,11 @@ export default function Tasks() {
                         {task.category && (
                           <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800">
                             #{task.category}
+                          </span>
+                        )}
+                        {task.recurrence && task.recurrence !== "none" && (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800 capitalize">
+                            🔁 {task.recurrence}
                           </span>
                         )}
                         {task.dueDate && (

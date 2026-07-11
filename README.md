@@ -17,6 +17,7 @@ A full-stack **MERN productivity app** to manage your tasks, notes and expenses 
 ### ✅ Tasks
 - Add / edit / delete, mark complete
 - **Kanban board** with drag & drop (To Do → In Progress → Done) + list view toggle
+- **Recurring tasks** (daily / weekly / monthly) — completing one auto-creates the next occurrence
 - Priority (High / Medium / Low) with colored badges
 - Due dates with **overdue alerts**, custom tags, descriptions
 - Filter tabs (All / Pending / Done), search, one-click "Clear Done"

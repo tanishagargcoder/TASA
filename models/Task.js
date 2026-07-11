@@ -11,6 +11,11 @@ const taskSchema = new mongoose.Schema(
       default: "todo"
     },
     completedAt: { type: Date, default: null },
+    recurrence: {
+      type: String,
+      enum: ["none", "daily", "weekly", "monthly"],
+      default: "none"
+    },
     priority: {
       type: String,
       enum: ["High", "Medium", "Low"],

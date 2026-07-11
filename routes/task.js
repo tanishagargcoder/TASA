@@ -4,6 +4,33 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// Next due date for a recurring task
+function nextDueDate(base, recurrence) {
+  const d = base ? new Date(base) : null;
+  if (!d) return null;
+  if (recurrence === "daily") d.setDate(d.getDate() + 1);
+  if (recurrence === "weekly") d.setDate(d.getDate() + 7);
+  if (recurrence === "monthly") d.setMonth(d.getMonth() + 1);
+  return d;
+}
+
+// When a recurring task is completed, create its next occurrence
+async function spawnNextOccurrence(task) {
+  if (!task.recurrence || task.recurrence === "none") return;
+
+  await new Task({
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    category: task.category,
+    recurrence: task.recurrence,
+    dueDate: nextDueDate(task.dueDate, task.recurrence),
+    status: "todo",
+    completed: false,
+    userId: task.userId
+  }).save();
+}
+
 
 // ADD TASK (PROTECTED)
 router.post("/", authMiddleware, async (req, res) => {
@@ -15,6 +42,7 @@ router.post("/", authMiddleware, async (req, res) => {
       dueDate: req.body.dueDate,
       category: req.body.category,
       status: req.body.status,
+      recurrence: req.body.recurrence,
       userId: req.user.id
     });
 
@@ -53,6 +81,8 @@ router.put("/toggle/:id", authMiddleware, async (req, res) => {
     task.completedAt = task.completed ? new Date() : null;
     await task.save();
 
+    if (task.completed) await spawnNextOccurrence(task);
+
     res.json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -81,8 +111,16 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 // UPDATE TASK (only own task)
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
+    const task = await Task.findOne({ _id: req.params.id, userId: req.user.id });
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const wasCompleted = task.completed;
+
     const updates = {};
-    ["title", "description", "priority", "dueDate", "completed", "category", "status"].forEach((field) => {
+    ["title", "description", "priority", "dueDate", "completed", "category", "status", "recurrence"].forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 
@@ -93,24 +131,22 @@ router.put("/:id", authMiddleware, async (req, res) => {
       updates.status = updates.completed ? "done" : "todo";
     }
 
-    // Track completion time for activity analytics
-    if (updates.completed === true) {
-      updates.completedAt = new Date();
-    } else if (updates.completed === false) {
-      updates.completedAt = null;
+    Object.assign(task, updates);
+
+    // Track completion time only on actual transition
+    if (!wasCompleted && task.completed) {
+      task.completedAt = new Date();
+    } else if (wasCompleted && !task.completed) {
+      task.completedAt = null;
     }
 
-    const updated = await Task.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.id },
-      updates,
-      { new: true }
-    );
+    await task.save();
 
-    if (!updated) {
-      return res.status(404).json({ message: "Task not found" });
+    if (!wasCompleted && task.completed) {
+      await spawnNextOccurrence(task);
     }
 
-    res.json(updated);
+    res.json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

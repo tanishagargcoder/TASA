@@ -222,6 +222,8 @@ router.delete("/me", authMiddleware, async (req, res) => {
     const Task = require("../models/Task");
     const Note = require("../models/Note");
     const Expense = require("../models/Expense");
+    const FocusSession = require("../models/FocusSession");
+    const Mood = require("../models/Mood");
 
     const userId = req.user.id;
 
@@ -229,6 +231,8 @@ router.delete("/me", authMiddleware, async (req, res) => {
       Task.deleteMany({ userId }),
       Note.deleteMany({ userId }),
       Expense.deleteMany({ userId }),
+      FocusSession.deleteMany({ userId }),
+      Mood.deleteMany({ userId }),
     ]);
 
     await User.findByIdAndDelete(userId);

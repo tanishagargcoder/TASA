@@ -8,6 +8,8 @@ const authRoutes = require("./routes/auth");
 const taskRoutes = require("./routes/task");
 const noteRoutes = require("./routes/note");
 const expenseRoutes = require("./routes/expense");
+const focusRoutes = require("./routes/focus");
+const moodRoutes = require("./routes/mood");
 
 const app = express();
 
@@ -40,6 +42,8 @@ app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/focus", focusRoutes);
+app.use("/api/mood", moodRoutes);
 
 app.get("/", (req, res) => {
   res.send("TASA API running...");

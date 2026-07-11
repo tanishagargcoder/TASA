@@ -40,6 +40,19 @@ A full-stack **MERN productivity app** to manage your tasks, notes and expenses 
 - Overdue / due-today reminder banners, quick actions
 - Time-based greeting 👋
 
+### ⏳ Focus Mode (Pomodoro)
+- 25 / 50 minute timers with animated countdown ring and auto break suggestions
+- Live countdown in the browser tab title + completion chime
+- Sessions logged to the database — daily & weekly focus stats ("Focused this week: 5h 25m")
+
+### 😊 Mood Tracking
+- One-tap daily mood check-in (😊 😐 😔 😫) on the dashboard
+- **Mood ↔ productivity insight** — e.g. "Your productivity is ~30% lower on stressed days"
+
+### 🏆 Achievements
+- 10 unlockable badges (Century Club, Deep Worker, Automator…) computed from your real activity
+- Locked badges show live progress (e.g. 7/10)
+
 ### 🔐 Authentication
 - JWT-based register / login, protected routes, user-specific data
 - Forgot password with **email OTP** (Nodemailer + Gmail)

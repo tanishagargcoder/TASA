@@ -7,6 +7,7 @@ export default function Profile() {
 
   const [user, setUser] = useState(null);
   const [counts, setCounts] = useState(null);
+  const [badges, setBadges] = useState([]);
   const [editName, setEditName] = useState("");
   const [editBudget, setEditBudget] = useState("");
   const [oldPassword, setOldPassword] = useState("");
@@ -22,20 +23,53 @@ export default function Profile() {
   const fetchUser = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [userRes, tasksRes, notesRes, expensesRes] = await Promise.all([
+      const [userRes, tasksRes, notesRes, expensesRes, focusRes] = await Promise.all([
         axios.get(`${API_URL}/api/auth/me`, { headers }),
         axios.get(`${API_URL}/api/tasks`, { headers }),
         axios.get(`${API_URL}/api/notes`, { headers }),
         axios.get(`${API_URL}/api/expenses`, { headers }),
+        axios.get(`${API_URL}/api/focus`, { headers }),
       ]);
       setUser(userRes.data);
       setEditName(userRes.data?.name || "");
       setEditBudget(userRes.data?.monthlyBudget ? String(userRes.data.monthlyBudget) : "");
+
+      const tasks = Array.isArray(tasksRes.data) ? tasksRes.data : [];
+      const notes = Array.isArray(notesRes.data) ? notesRes.data : [];
+      const expenses = Array.isArray(expensesRes.data) ? expensesRes.data : [];
+      const focus = Array.isArray(focusRes.data) ? focusRes.data : [];
+
       setCounts({
-        tasks: Array.isArray(tasksRes.data) ? tasksRes.data.length : 0,
-        notes: Array.isArray(notesRes.data) ? notesRes.data.length : 0,
-        expenses: Array.isArray(expensesRes.data) ? expensesRes.data.length : 0,
+        tasks: tasks.length,
+        notes: notes.length,
+        expenses: expenses.length,
       });
+
+      // ===== Achievements =====
+      const doneTasks = tasks.filter((t) => t.completed).length;
+      const taggedTasks = tasks.filter((t) => t.category).length;
+      const recurringTasks = tasks.filter((t) => t.recurrence && t.recurrence !== "none").length;
+      const noteColors = new Set(notes.map((n) => n.color || "yellow")).size;
+      const focusMinutes = focus.reduce((s, f) => s + (Number(f.minutes) || 0), 0);
+
+      const badge = (emoji, title, desc, current, target) => ({
+        emoji, title, desc,
+        earned: current >= target,
+        progress: `${Math.min(current, target)}/${target}`,
+      });
+
+      setBadges([
+        badge("✅", "First Steps", "Complete your first task", doneTasks, 1),
+        badge("🔟", "Task Slayer", "Complete 10 tasks", doneTasks, 10),
+        badge("💯", "Century Club", "Complete 100 tasks", doneTasks, 100),
+        badge("🏷️", "Organizer", "Tag 10 tasks", taggedTasks, 10),
+        badge("🔁", "Automator", "Create a recurring task", recurringTasks, 1),
+        badge("📝", "Note Taker", "Write 10 notes", notes.length, 10),
+        badge("🌈", "Colorful Mind", "Use 3 note colors", noteColors, 3),
+        badge("💸", "Money Watcher", "Log 25 expenses", expenses.length, 25),
+        badge("⏳", "First Focus", "Finish a focus session", focus.length, 1),
+        badge("🕐", "Deep Worker", "Focus for 20 hours total", Math.floor(focusMinutes / 60), 20),
+      ]);
     } catch {
       setMessage({ type: "error", text: "Could not load profile" });
     }
@@ -135,6 +169,38 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Achievements */}
+      {badges.length > 0 && (
+        <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 mb-6 max-w-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Achievements 🏆</h3>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {badges.filter((b) => b.earned).length}/{badges.length} unlocked
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {badges.map((b) => (
+              <div
+                key={b.title}
+                title={`${b.desc} (${b.progress})`}
+                className={`rounded-xl p-3 text-center border transition ${
+                  b.earned
+                    ? "bg-gradient-to-br from-pink-100 to-rose-100 dark:from-rose-900/50 dark:to-pink-900/40 border-rose-200 dark:border-rose-800 shadow"
+                    : "bg-white/30 dark:bg-white/5 border-white/40 dark:border-white/10 opacity-50 grayscale"
+                }`}
+              >
+                <p className="text-3xl">{b.emoji}</p>
+                <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 mt-1">{b.title}</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                  {b.earned ? "Unlocked ✨" : b.progress}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Edit profile */}
       <form

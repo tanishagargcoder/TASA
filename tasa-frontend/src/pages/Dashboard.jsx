@@ -3,8 +3,16 @@ import Tasks from "./Tasks";
 import Notes from "./Notes";
 import Expense from "./Expense";
 import Profile from "./Profile";
+import Focus from "./Focus";
 import ThemeToggle from "../components/ThemeToggle";
 import { API_URL } from "../config";
+
+const MOODS = [
+  { key: "happy", emoji: "😊", label: "Happy" },
+  { key: "normal", emoji: "😐", label: "Normal" },
+  { key: "sad", emoji: "😔", label: "Sad" },
+  { key: "stressed", emoji: "😫", label: "Stressed" },
+];
 
 const CATEGORIES = ["Food", "Travel", "Shopping", "Bills", "Other"];
 
@@ -40,6 +48,9 @@ export default function Dashboard() {
     heatDays: [],
     streak: 0,
     score: 0,
+    weekFocusMinutes: 0,
+    todayMood: null,
+    moodInsight: "",
   });
 
   const token = localStorage.getItem("token");
@@ -48,23 +59,29 @@ export default function Dashboard() {
     const headers = { Authorization: `Bearer ${token}` };
 
     try {
-      const [userRes, tasksRes, notesRes, expensesRes] = await Promise.all([
+      const [userRes, tasksRes, notesRes, expensesRes, focusRes, moodRes] = await Promise.all([
         fetch(`${API_URL}/api/auth/me`, { headers }),
         fetch(`${API_URL}/api/tasks`, { headers }),
         fetch(`${API_URL}/api/notes`, { headers }),
         fetch(`${API_URL}/api/expenses`, { headers }),
+        fetch(`${API_URL}/api/focus`, { headers }),
+        fetch(`${API_URL}/api/mood`, { headers }),
       ]);
 
       const user = await userRes.json();
       const tasks = await tasksRes.json();
       const notes = await notesRes.json();
       const expenses = await expensesRes.json();
+      const focus = await focusRes.json();
+      const moods = await moodRes.json();
 
       if (user?.name) setUserName(user.name);
 
       const taskList = Array.isArray(tasks) ? tasks : [];
       const noteList = Array.isArray(notes) ? notes : [];
       const expenseList = Array.isArray(expenses) ? expenses : [];
+      const focusList = Array.isArray(focus) ? focus : [];
+      const moodList = Array.isArray(moods) ? moods : [];
 
       const now = new Date();
       const todayStart = new Date(now.toDateString());
@@ -116,6 +133,43 @@ export default function Dashboard() {
       taskList.forEach((t) => bump(t.completedAt || (t.completed ? t.updatedAt : null)));
       noteList.forEach((n) => bump(n.createdAt));
       expenseList.forEach((e) => bump(e.date || e.createdAt));
+      focusList.forEach((f) => bump(f.date));
+
+      // Focus minutes this week
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const weekFocusMinutes = focusList
+        .filter((f) => new Date(f.date) >= weekAgo)
+        .reduce((sum, f) => sum + (Number(f.minutes) || 0), 0);
+
+      // Today's mood + mood↔productivity insight
+      const now2 = new Date();
+      const todayMoodKey = `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, "0")}-${String(now2.getDate()).padStart(2, "0")}`;
+      const todayMood = moodList.find((m) => m.day === todayMoodKey)?.mood || null;
+
+      let moodInsight = "";
+      const activityForMoodDay = (m) => {
+        const [y, mo, da] = m.day.split("-").map(Number);
+        return activity[`${y}-${mo - 1}-${da}`] || 0;
+      };
+      const goodDays = moodList.filter((m) => m.mood === "happy" || m.mood === "normal");
+      const lowDays = moodList.filter((m) => m.mood === "sad" || m.mood === "stressed");
+      if (goodDays.length >= 3 && lowDays.length >= 3) {
+        const avg = (arr) => arr.reduce((s, m) => s + activityForMoodDay(m), 0) / arr.length;
+        const goodAvg = avg(goodDays);
+        const lowAvg = avg(lowDays);
+        if (goodAvg > 0 && lowAvg < goodAvg) {
+          const drop = Math.round((1 - lowAvg / goodAvg) * 100);
+          if (drop >= 10) {
+            moodInsight = `Your productivity is ~${drop}% lower on sad/stressed days. Be kind to yourself on those days 💛`;
+          }
+        }
+        if (!moodInsight && lowAvg >= goodAvg) {
+          moodInsight = "You stay productive even on tough days — impressive resilience! 💪";
+        }
+      } else if (moodList.length > 0) {
+        moodInsight = "Log your mood daily — after a week, TASA will show how mood affects your productivity.";
+      }
 
       // Last 15 weeks of daily activity (ends today)
       const heatDays = [];
@@ -170,6 +224,9 @@ export default function Dashboard() {
         heatDays,
         streak,
         score,
+        weekFocusMinutes,
+        todayMood,
+        moodInsight,
       });
     } catch {
       // overview stats are best-effort; modules load their own data
@@ -187,6 +244,22 @@ export default function Dashboard() {
   const navigate = (key) => {
     setActive(key);
     setSidebarOpen(false);
+  };
+
+  const setMood = async (mood) => {
+    setStats((s) => ({ ...s, todayMood: mood }));
+    try {
+      await fetch(`${API_URL}/api/mood`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ mood }),
+      });
+    } catch {
+      // best-effort
+    }
   };
 
   const navItem = (key, label) => (
@@ -228,6 +301,7 @@ export default function Dashboard() {
           {navItem("tasks", "Tasks")}
           {navItem("notes", "Notes")}
           {navItem("expenses", "Expenses")}
+          {navItem("focus", "Focus ⏳")}
           {navItem("profile", "Profile")}
 
           <div
@@ -285,6 +359,36 @@ export default function Dashboard() {
 
           {active === "overview" && !loadingStats && (
             <div className="fade-up">
+
+              {/* Mood check-in */}
+              <div className="mb-6 bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-5 rounded-2xl shadow-lg">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    {stats.todayMood ? "Today's mood" : "How are you feeling today?"}
+                  </p>
+                  <div className="flex gap-2">
+                    {MOODS.map((m) => (
+                      <button
+                        key={m.key}
+                        onClick={() => setMood(m.key)}
+                        title={m.label}
+                        className={`text-2xl p-2 rounded-xl transition hover:scale-110 ${
+                          stats.todayMood === m.key
+                            ? "bg-white/70 dark:bg-white/20 shadow ring-2 ring-rose-400"
+                            : "hover:bg-white/40 dark:hover:bg-white/10"
+                        }`}
+                      >
+                        {m.emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {stats.moodInsight && (
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-3">
+                    💡 {stats.moodInsight}
+                  </p>
+                )}
+              </div>
 
               {/* Quick actions */}
               <div className="flex flex-wrap gap-3 mb-6">
@@ -406,8 +510,8 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Productivity score + streak */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+              {/* Productivity score + streak + focus */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
 
                 <div className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg flex items-center gap-5">
                   <svg viewBox="0 0 100 100" className="w-24 h-24 shrink-0">
@@ -450,6 +554,26 @@ export default function Dashboard() {
                       {stats.streak === 0
                         ? "Complete a task or add a note today to start one!"
                         : "Keep it going — do anything in TASA today."}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => navigate("focus")}
+                  className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg flex items-center gap-5 cursor-pointer hover:bg-white/40 dark:hover:bg-white/20 transition"
+                >
+                  <span className="text-5xl">⏳</span>
+                  <div>
+                    <p className="text-4xl font-bold text-gray-800 dark:text-gray-100">
+                      {stats.weekFocusMinutes >= 60
+                        ? `${Math.floor(stats.weekFocusMinutes / 60)}h ${stats.weekFocusMinutes % 60}m`
+                        : `${stats.weekFocusMinutes}m`}
+                    </p>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mt-1">Focused This Week</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {stats.weekFocusMinutes === 0
+                        ? "Start a Pomodoro session →"
+                        : "Tap to start another session"}
                     </p>
                   </div>
                 </div>
@@ -568,6 +692,7 @@ export default function Dashboard() {
           {active === "tasks" && <Tasks />}
           {active === "notes" && <Notes />}
           {active === "expenses" && <Expense />}
+          {active === "focus" && <Focus />}
           {active === "profile" && <Profile />}
 
         </div>

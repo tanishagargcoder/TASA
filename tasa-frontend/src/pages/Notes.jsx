@@ -63,7 +63,7 @@ export default function Notes() {
       const res = await axios.post(API, { text, color }, authHeaders);
       setNotes([res.data, ...notes]);
       setText("");
-      toast("Note added 📝");
+      toast("Note added");
     } catch {
       setError("Could not save note");
     }
@@ -73,7 +73,7 @@ export default function Notes() {
     if (!window.confirm("Delete this note?")) return;
     await axios.delete(`${API}/${id}`, authHeaders);
     setNotes(notes.filter((n) => n._id !== id));
-    toast("Note deleted 🗑️");
+    toast("Note deleted");
   };
 
   const togglePin = async (note) => {
@@ -83,13 +83,13 @@ export default function Notes() {
       authHeaders
     );
     setNotes(notes.map(n => (n._id === note._id ? res.data : n)));
-    toast(res.data.pinned ? "Note pinned 📌" : "Note unpinned");
+    toast(res.data.pinned ? "Note pinned" : "Note unpinned");
   };
 
   const copyNote = async (note) => {
     try {
       await navigator.clipboard.writeText(note.text);
-      toast("Copied to clipboard 📋");
+      toast("Copied to clipboard");
     } catch {
       toast("Could not copy", "error");
     }
@@ -117,7 +117,7 @@ export default function Notes() {
 
     setEditingId(null);
     setText("");
-    toast("Note updated ✏️");
+    toast("Note updated");
   };
 
   const filteredNotes = notes
@@ -133,7 +133,7 @@ export default function Notes() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Notes 📝</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Notes</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
             Capture ideas before they fade.
           </p>
@@ -212,7 +212,7 @@ export default function Notes() {
       {/* Notes grid */}
       {filteredNotes.length === 0 && (
         <p className="text-gray-600 dark:text-gray-300">
-          {search ? "No notes match your search." : "No notes yet. Write your first note 🌸"}
+          {search ? "No notes match your search." : "No notes yet. Write your first note."}
         </p>
       )}
 
@@ -227,7 +227,6 @@ export default function Notes() {
               }`}
             >
               <p className="text-gray-800 dark:text-gray-100 flex-1 whitespace-pre-wrap break-words">
-                {note.pinned && <span className="mr-1">📌</span>}
                 {note.text}
               </p>
 
@@ -242,7 +241,7 @@ export default function Notes() {
                     title="Copy note"
                     className="px-3 py-1 rounded-lg text-sm bg-white/70 border border-gray-300 text-gray-700 hover:bg-white dark:bg-gray-800/60 dark:border-gray-600 dark:text-gray-200 transition"
                   >
-                    📋
+                    Copy
                   </button>
                   <button
                     onClick={() => togglePin(note)}
@@ -253,7 +252,7 @@ export default function Notes() {
                         : "bg-white/70 border-gray-300 text-gray-700 hover:bg-white dark:bg-gray-800/60 dark:border-gray-600 dark:text-gray-200"
                     }`}
                   >
-                    📌
+                    {note.pinned ? "Unpin" : "Pin"}
                   </button>
                   <button
                     onClick={() => startEdit(note)}

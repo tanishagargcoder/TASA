@@ -84,7 +84,7 @@ export default function Profile() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUser(res.data);
-      toast("Profile updated ✨");
+      toast("Profile updated");
     } catch {
       toast("Could not update profile", "error");
     }
@@ -131,7 +131,7 @@ export default function Profile() {
         { oldPassword, newPassword },
         authHeaders
       );
-      setMessage({ type: "ok", text: "Password changed successfully ✨" });
+      setMessage({ type: "ok", text: "Password changed successfully" });
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -149,7 +149,7 @@ export default function Profile() {
     <div className="fade-up">
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Profile 👤</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Profile</h2>
         <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
           Your account, progress and settings.
         </p>
@@ -179,7 +179,7 @@ export default function Profile() {
       {badges.length > 0 && (
         <div className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 mb-6 max-w-xl">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Achievements 🏆</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Achievements</h3>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {badges.filter((b) => b.earned).length}/{badges.length} unlocked
             </span>
@@ -199,7 +199,7 @@ export default function Profile() {
                 <p className="text-3xl">{b.emoji}</p>
                 <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 mt-1">{b.title}</p>
                 <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  {b.earned ? "Unlocked ✨" : b.progress}
+                  {b.earned ? "Unlocked" : b.progress}
                 </p>
               </div>
             ))}
@@ -212,7 +212,7 @@ export default function Profile() {
         onSubmit={saveProfile}
         className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 mb-6 max-w-xl"
       >
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Edit Profile ✏️</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Edit Profile</h3>
 
         <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Display name</label>
         <input
@@ -247,16 +247,15 @@ export default function Profile() {
       {counts && (
         <div className="grid grid-cols-3 gap-4 mb-6 max-w-xl">
           {[
-            { label: "Tasks", value: counts.tasks, emoji: "✅" },
-            { label: "Notes", value: counts.notes, emoji: "📝" },
-            { label: "Expenses", value: counts.expenses, emoji: "💸" },
+            { label: "Tasks", value: counts.tasks },
+            { label: "Notes", value: counts.notes },
+            { label: "Expenses", value: counts.expenses },
           ].map((s) => (
             <div
               key={s.label}
               className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow p-4 text-center"
             >
-              <p className="text-2xl">{s.emoji}</p>
-              <p className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{s.value}</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{s.value}</p>
               <p className="text-xs text-gray-600 dark:text-gray-300">{s.label}</p>
             </div>
           ))}
@@ -268,7 +267,7 @@ export default function Profile() {
         onSubmit={changePassword}
         className="bg-white/30 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg p-6 max-w-xl"
       >
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Change Password 🔒</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Change Password</h3>
 
         {message && (
           <p className={`mb-4 text-sm rounded-xl p-3 border ${
@@ -318,7 +317,7 @@ export default function Profile() {
 
       {/* Danger zone */}
       <div className="mt-6 bg-red-50/60 dark:bg-red-900/20 backdrop-blur-xl border border-red-200 dark:border-red-900 rounded-2xl shadow-lg p-6 max-w-xl">
-        <h3 className="text-lg font-semibold text-red-700 dark:text-red-300 mb-2">Danger Zone ⚠️</h3>
+        <h3 className="text-lg font-semibold text-red-700 dark:text-red-300 mb-2">Danger Zone</h3>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Deleting your account removes all your tasks, notes and expenses permanently. This cannot be undone.
         </p>

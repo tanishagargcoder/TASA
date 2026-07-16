@@ -5,14 +5,6 @@ import { useToast } from "../context/ToastContext";
 
 const CATEGORIES = ["Food", "Travel", "Shopping", "Bills", "Other"];
 
-const categoryEmoji = {
-  Food: "🍔",
-  Travel: "🚌",
-  Shopping: "🛍️",
-  Bills: "🧾",
-  Other: "📦",
-};
-
 // CVD-validated categorical palette (passes light & dark checks)
 const categoryColor = {
   Food: "#e11d48",
@@ -85,7 +77,7 @@ function DonutChart({ data, total }) {
               style={{ background: categoryColor[d.cat] }}
             />
             <span className="text-gray-700 dark:text-gray-200">
-              {categoryEmoji[d.cat]} {d.cat}
+              {d.cat}
             </span>
             <span className="text-gray-500 dark:text-gray-400">
               ₹{d.total.toLocaleString("en-IN")} ({Math.round((d.total / total) * 100)}%)
@@ -153,7 +145,7 @@ export default function Expense() {
           authHeaders
         );
         setExpenses(expenses.map(e => (e._id === editingId ? res.data : e)));
-        toast("Expense updated ✏️");
+        toast("Expense updated");
       } else {
         const res = await axios.post(
           API,
@@ -161,7 +153,7 @@ export default function Expense() {
           authHeaders
         );
         setExpenses([res.data, ...expenses]);
-        toast(`Expense added — ₹${Number(res.data.amount).toLocaleString("en-IN")} 💸`);
+        toast(`Expense added — ₹${Number(res.data.amount).toLocaleString("en-IN")}`);
       }
       resetForm();
     } catch {
@@ -180,7 +172,7 @@ export default function Expense() {
     if (!window.confirm("Delete this expense?")) return;
     await axios.delete(`${API}/${id}`, authHeaders);
     setExpenses(expenses.filter(e => e._id !== id));
-    toast("Expense deleted 🗑️");
+    toast("Expense deleted");
   };
 
   const exportCSV = (rows) => {
@@ -206,7 +198,7 @@ export default function Expense() {
     a.download = `tasa-expenses-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
-    toast("CSV downloaded 📥");
+    toast("CSV downloaded");
   };
 
   // Month options: current + previous 5 months + all time
@@ -245,7 +237,7 @@ export default function Expense() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Expenses 💸</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Expenses</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
             Know exactly where your money goes.
           </p>
@@ -270,7 +262,7 @@ export default function Expense() {
             title="Download visible expenses as CSV"
             className="px-4 py-2 rounded-xl text-sm bg-white/40 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-white/20 transition"
           >
-            📥 Export CSV
+            Export CSV
           </button>
         </div>
       </div>
@@ -322,7 +314,7 @@ export default function Expense() {
             </div>
             {periodTotal > budget && (
               <p className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
-                ⚠️ Budget exceeded by ₹{(periodTotal - budget).toLocaleString("en-IN")}
+                Budget exceeded by ₹{(periodTotal - budget).toLocaleString("en-IN")}
               </p>
             )}
           </div>
@@ -346,7 +338,7 @@ export default function Expense() {
           className={inputCls}
         >
           {CATEGORIES.map(cat => (
-            <option key={cat} value={cat}>{categoryEmoji[cat]} {cat}</option>
+            <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
 
@@ -377,7 +369,7 @@ export default function Expense() {
 
       {/* Expense history */}
       {visible.length === 0 && (
-        <p className="text-gray-600 dark:text-gray-300">No expenses in this period 🌸</p>
+        <p className="text-gray-600 dark:text-gray-300">No expenses in this period.</p>
       )}
 
       <div className="space-y-3">
@@ -390,8 +382,6 @@ export default function Expense() {
               className="w-2 h-8 rounded-full shrink-0"
               style={{ background: categoryColor[e.category] || categoryColor.Other }}
             />
-            <span className="text-2xl">{categoryEmoji[e.category] || "📦"}</span>
-
             <div className="flex-1 min-w-[150px]">
               <p className="font-medium text-gray-800 dark:text-gray-100">
                 {e.category}{e.note ? ` — ${e.note}` : ""}

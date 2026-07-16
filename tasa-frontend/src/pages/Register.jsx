@@ -59,7 +59,7 @@ export default function Register() {
         className="bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-2xl p-10 rounded-3xl w-96"
       >
         <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-6 text-center">
-          Join TASA ✨
+          Create your account
         </h2>
 
         {error && (
@@ -99,9 +99,9 @@ export default function Register() {
             type="button"
             onClick={() => setShowPass(!showPass)}
             title={showPass ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-lg opacity-70 hover:opacity-100"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           >
-            {showPass ? "🙈" : "👁️"}
+            {showPass ? "Hide" : "Show"}
           </button>
         </div>
 

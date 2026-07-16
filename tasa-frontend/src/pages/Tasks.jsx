@@ -3,9 +3,9 @@ import { API_URL } from "../config";
 import { useToast } from "../context/ToastContext";
 
 const COLUMNS = [
-  { key: "todo", label: "📋 To Do", bar: "bg-blue-400" },
-  { key: "inprogress", label: "⚡ In Progress", bar: "bg-amber-400" },
-  { key: "done", label: "✅ Done", bar: "bg-green-400" },
+  { key: "todo", label: "To Do", bar: "bg-blue-400" },
+  { key: "inprogress", label: "In Progress", bar: "bg-amber-400" },
+  { key: "done", label: "Done", bar: "bg-green-400" },
 ];
 
 // Old tasks (created before the board existed) have no status field
@@ -98,7 +98,7 @@ export default function Tasks() {
 
       if (!res.ok) throw new Error();
 
-      toast(editingId ? "Task updated ✏️" : "Task added ✅");
+      toast(editingId ? "Task updated" : "Task added");
       resetForm();
       getTasks();
     } catch {
@@ -122,7 +122,7 @@ export default function Tasks() {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
     });
-    toast("Task deleted 🗑️");
+    toast("Task deleted");
     getTasks();
   };
 
@@ -148,8 +148,8 @@ export default function Tasks() {
     if (newStatus === "done") {
       toast(
         task.recurrence && task.recurrence !== "none"
-          ? `Task completed 🎉 Next ${task.recurrence} one created 🔁`
-          : "Task completed 🎉"
+          ? `Task completed — next ${task.recurrence} task created`
+          : "Task completed"
       );
     }
     getTasks();
@@ -166,7 +166,7 @@ export default function Tasks() {
         headers: { Authorization: `Bearer ${token}` }
       })
     ));
-    toast(`${done.length} completed task${done.length > 1 ? "s" : ""} cleared 🧹`);
+    toast(`${done.length} completed task${done.length > 1 ? "s" : ""} cleared`);
     getTasks();
   };
 
@@ -178,8 +178,8 @@ export default function Tasks() {
     if (!task.completed) {
       toast(
         task.recurrence && task.recurrence !== "none"
-          ? `Task completed 🎉 Next ${task.recurrence} one created 🔁`
-          : "Task completed 🎉"
+          ? `Task completed — next ${task.recurrence} task created`
+          : "Task completed"
       );
     }
     getTasks();
@@ -219,7 +219,7 @@ export default function Tasks() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Tasks ✅</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Tasks</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
             Plan, prioritize and get things done.
           </p>
@@ -300,9 +300,9 @@ export default function Tasks() {
           className={inputCls}
         >
           <option value="none">No repeat</option>
-          <option value="daily">🔁 Daily</option>
-          <option value="weekly">🔁 Weekly</option>
-          <option value="monthly">🔁 Monthly</option>
+          <option value="daily">Repeats daily</option>
+          <option value="weekly">Repeats weekly</option>
+          <option value="monthly">Repeats monthly</option>
         </select>
 
         <button
@@ -365,7 +365,7 @@ export default function Tasks() {
             onClick={clearCompleted}
             className="px-4 py-2.5 rounded-xl text-sm bg-white/40 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/40 dark:hover:text-red-300 transition"
           >
-            🧹 Clear Done
+            Clear Done
           </button>
         )}
       </div>
@@ -374,7 +374,7 @@ export default function Tasks() {
       {visibleTasks.length === 0 && (
         <p className="text-gray-600 dark:text-gray-300">
           {tasks.length === 0
-            ? "No tasks yet. Add your first task above 🌸"
+            ? "No tasks yet. Add your first task above."
             : "No tasks match this filter."}
         </p>
       )}
@@ -404,7 +404,7 @@ export default function Tasks() {
               {task.dueDate && (
                 <p className={`text-xs mt-1 ${isOverdue(task) ? "text-red-600 dark:text-red-400 font-semibold" : "text-gray-500 dark:text-gray-400"}`}>
                   Due: {new Date(task.dueDate).toLocaleDateString()}
-                  {isOverdue(task) && " · Overdue ⚠️"}
+                  {isOverdue(task) && " · Overdue"}
                 </p>
               )}
             </div>
@@ -417,7 +417,7 @@ export default function Tasks() {
 
             {task.recurrence && task.recurrence !== "none" && (
               <span className="text-xs font-medium px-3 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800 capitalize">
-                🔁 {task.recurrence}
+                {task.recurrence}
               </span>
             )}
 
@@ -502,12 +502,12 @@ export default function Tasks() {
                         )}
                         {task.recurrence && task.recurrence !== "none" && (
                           <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800 capitalize">
-                            🔁 {task.recurrence}
+                            {task.recurrence}
                           </span>
                         )}
                         {task.dueDate && (
                           <span className={`text-[10px] ${isOverdue(task) ? "text-red-600 dark:text-red-400 font-semibold" : "text-gray-500 dark:text-gray-400"}`}>
-                            📅 {new Date(task.dueDate).toLocaleDateString()}
+                            Due {new Date(task.dueDate).toLocaleDateString()}
                           </span>
                         )}
                       </div>
@@ -528,13 +528,13 @@ export default function Tasks() {
                             onClick={() => startEdit(task)}
                             className="px-2 py-0.5 rounded-lg text-xs bg-white/60 dark:bg-white/10 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-white transition"
                           >
-                            ✏️
+                            Edit
                           </button>
                           <button
                             onClick={() => deleteTask(task._id)}
                             className="px-2 py-0.5 rounded-lg text-xs bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-800 text-red-500 dark:text-red-300 hover:bg-red-100 transition"
                           >
-                            🗑️
+                            Delete
                           </button>
                         </div>
 

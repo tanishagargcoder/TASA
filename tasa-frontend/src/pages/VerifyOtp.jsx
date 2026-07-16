@@ -43,7 +43,7 @@ export default function VerifyOtp() {
         className="bg-white/40 dark:bg-gray-900/60 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-2xl p-10 rounded-3xl w-96"
       >
         <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-100 mb-3 text-center">
-          Verify OTP ✨
+          Verify OTP
         </h2>
 
         <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-6">

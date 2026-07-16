@@ -3,17 +3,14 @@ import ThemeToggle from "../components/ThemeToggle";
 
 const features = [
   {
-    emoji: "✅",
     title: "Tasks",
     desc: "Add priorities & due dates, track progress and never miss a deadline.",
   },
   {
-    emoji: "📝",
     title: "Notes",
     desc: "Capture ideas instantly, pin the important ones and search everything.",
   },
   {
-    emoji: "💸",
     title: "Expenses",
     desc: "Log spending by category and see monthly summaries with charts.",
   },
@@ -26,7 +23,7 @@ export default function Landing() {
       {/* Navbar */}
       <div className="flex justify-between items-center px-6 sm:px-10 py-6">
         <div className="text-2xl font-extrabold text-gray-800 dark:text-gray-100">
-          TASA <span className="text-rose-500">✨</span>
+          TASA<span className="text-rose-500">.</span>
         </div>
 
         <div className="flex gap-3 items-center">
@@ -50,12 +47,12 @@ export default function Landing() {
       <div className="flex flex-1 items-center justify-center text-center px-6 py-16">
         <div className="fade-up">
           <span className="inline-block mb-6 px-4 py-1.5 rounded-full bg-white/50 dark:bg-gray-800/60 backdrop-blur-md border border-white/60 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200 shadow">
-            🌸 Track and Simplify Activities
+            Track and Simplify Activities
           </span>
 
           <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-800 dark:text-gray-100 leading-tight">
             Organize your life <br />
-            the smart way ✨
+            the smart way.
           </h2>
 
           <p className="mt-4 text-gray-600 dark:text-gray-300 text-lg max-w-xl mx-auto">
@@ -85,8 +82,8 @@ export default function Landing() {
                 key={f.title}
                 className="bg-white/40 dark:bg-white/10 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-2xl shadow-lg p-6 hover:shadow-2xl hover:-translate-y-1 transition duration-300"
               >
-                <div className="text-3xl">{f.emoji}</div>
-                <h3 className="mt-3 text-lg font-bold text-gray-800 dark:text-gray-100">{f.title}</h3>
+                <div className="w-8 h-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500" />
+                <h3 className="mt-4 text-lg font-bold text-gray-800 dark:text-gray-100">{f.title}</h3>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{f.desc}</p>
               </div>
             ))}
@@ -97,7 +94,7 @@ export default function Landing() {
       {/* How it works */}
       <div className="px-6 pb-16">
         <h3 className="text-center text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8">
-          How it works 🌟
+          How it works
         </h3>
         <div className="flex flex-wrap justify-center gap-6 max-w-3xl mx-auto">
           {[
@@ -117,7 +114,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-        Made with 💖 · TASA — Track and Simplify Activities
+        TASA — Track and Simplify Activities
       </footer>
     </div>
   );

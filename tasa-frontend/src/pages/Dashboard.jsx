@@ -161,11 +161,11 @@ export default function Dashboard() {
         if (goodAvg > 0 && lowAvg < goodAvg) {
           const drop = Math.round((1 - lowAvg / goodAvg) * 100);
           if (drop >= 10) {
-            moodInsight = `Your productivity is ~${drop}% lower on sad/stressed days. Be kind to yourself on those days 💛`;
+            moodInsight = `Your productivity is ~${drop}% lower on sad/stressed days. Be kind to yourself on those days.`;
           }
         }
         if (!moodInsight && lowAvg >= goodAvg) {
-          moodInsight = "You stay productive even on tough days — impressive resilience! 💪";
+          moodInsight = "You stay productive even on tough days — impressive resilience.";
         }
       } else if (moodList.length > 0) {
         moodInsight = "Log your mood daily — after a week, TASA will show how mood affects your productivity.";
@@ -293,7 +293,7 @@ export default function Dashboard() {
         }`}
       >
         <div className="mb-10 text-xl font-extrabold text-gray-800 dark:text-gray-100">
-          TASA <span className="text-rose-500">✨</span>
+          TASA<span className="text-rose-500">.</span>
         </div>
 
         <nav className="space-y-3">
@@ -301,7 +301,7 @@ export default function Dashboard() {
           {navItem("tasks", "Tasks")}
           {navItem("notes", "Notes")}
           {navItem("expenses", "Expenses")}
-          {navItem("focus", "Focus ⏳")}
+          {navItem("focus", "Focus")}
           {navItem("profile", "Profile")}
 
           <div
@@ -330,7 +330,7 @@ export default function Dashboard() {
             </button>
 
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {greeting()}{userName ? `, ${userName}` : ""} 👋
+              {greeting()}{userName ? `, ${userName}` : ""}
             </h1>
 
             <p className="text-gray-600 dark:text-gray-300 mt-2">
@@ -385,7 +385,7 @@ export default function Dashboard() {
                 </div>
                 {stats.moodInsight && (
                   <p className="text-xs text-gray-600 dark:text-gray-300 mt-3">
-                    💡 {stats.moodInsight}
+                    {stats.moodInsight}
                   </p>
                 )}
               </div>
@@ -416,7 +416,7 @@ export default function Dashboard() {
                       className="cursor-pointer bg-red-100/70 dark:bg-red-900/40 border border-red-200 dark:border-red-800 rounded-2xl p-4 shadow"
                     >
                       <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-                        ⚠️ {stats.overdue.length} overdue task{stats.overdue.length > 1 ? "s" : ""}
+                        {stats.overdue.length} overdue task{stats.overdue.length > 1 ? "s" : ""}
                       </p>
                       <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate">
                         {stats.overdue.map((t) => t.title).join(" · ")}
@@ -430,7 +430,7 @@ export default function Dashboard() {
                       className="cursor-pointer bg-amber-100/70 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 shadow"
                     >
                       <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                        ⏰ {stats.dueToday.length} task{stats.dueToday.length > 1 ? "s" : ""} due today
+                        {stats.dueToday.length} task{stats.dueToday.length > 1 ? "s" : ""} due today
                       </p>
                       <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 truncate">
                         {stats.dueToday.map((t) => t.title).join(" · ")}
@@ -535,7 +535,7 @@ export default function Dashboard() {
                   </svg>
                   <div>
                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                      Productivity Score 🎯
+                      Productivity Score
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Based on task completion, active days this week and your streak.
@@ -544,7 +544,6 @@ export default function Dashboard() {
                 </div>
 
                 <div className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg flex items-center gap-5">
-                  <span className="text-5xl">🔥</span>
                   <div>
                     <p className="text-4xl font-bold text-gray-800 dark:text-gray-100">
                       {stats.streak} <span className="text-lg font-semibold">day{stats.streak !== 1 ? "s" : ""}</span>
@@ -562,7 +561,6 @@ export default function Dashboard() {
                   onClick={() => navigate("focus")}
                   className="bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg flex items-center gap-5 cursor-pointer hover:bg-white/40 dark:hover:bg-white/20 transition"
                 >
-                  <span className="text-5xl">⏳</span>
                   <div>
                     <p className="text-4xl font-bold text-gray-800 dark:text-gray-100">
                       {stats.weekFocusMinutes >= 60
@@ -572,7 +570,7 @@ export default function Dashboard() {
                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mt-1">Focused This Week</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {stats.weekFocusMinutes === 0
-                        ? "Start a Pomodoro session →"
+                        ? "Start a session on the Focus page"
                         : "Tap to start another session"}
                     </p>
                   </div>
@@ -584,7 +582,7 @@ export default function Dashboard() {
               <div className="mt-6 bg-white/25 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 p-6 rounded-2xl shadow-lg">
                 <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
                   <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    Activity — Last 15 Weeks 🟩
+                    Activity — Last 15 Weeks
                   </p>
                   <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                     Less

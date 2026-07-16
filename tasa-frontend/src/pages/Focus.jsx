@@ -97,11 +97,11 @@ export default function Focus() {
       axios.post(`${API_URL}/api/focus`, { minutes: preset.minutes }, authHeaders)
         .then(() => fetchSessions())
         .catch(() => {});
-      toast(`${preset.minutes} min focus session logged — time for a ${preset.break} min break ☕`);
+      toast(`${preset.minutes} min focus session logged — time for a ${preset.break} min break`);
       setMode("break");
       setSecondsLeft(preset.break * 60);
     } else {
-      toast("Break over — ready for the next session 💪");
+      toast("Break over — ready for the next session");
       setMode("work");
       setSecondsLeft(preset.minutes * 60);
     }
@@ -171,7 +171,7 @@ export default function Focus() {
     <div className="fade-up">
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Focus ⏳</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Focus</h2>
         <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
           Deep work, one session at a time.
         </p>
